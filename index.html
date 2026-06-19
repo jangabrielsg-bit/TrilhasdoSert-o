@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Trilhas do Sertão Burger</title>
+<meta name="theme-color" content="#0a0a0a" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rye&family=Rubik:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,500&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<style>
+  :root{
+    --bg: #0a0a0a;
+    --bg-soft: #141210;
+    --panel: #1a1714;
+    --leather: #2a1f16;
+    --green: #4ADE80;
+    --green-dim: #2e7d52;
+    --orange: #FFA726;
+    --orange-deep: #E65100;
+    --red: #D32F2F;
+    --cream: #F5F1E8;
+    --cream-dim: #c9c2b3;
+  }
+  html,body{ background:var(--bg); margin:0; }
+  #root{ min-height:100vh; }
+
+  .font-display{ font-family:'Rye', serif; }
+  .font-body{ font-family:'Rubik', sans-serif; }
+
+  .brand-burn{
+    text-shadow: 0 0 1px rgba(0,0,0,0.6), 0 2px 0 rgba(0,0,0,0.5), 0 0 18px currentColor;
+    letter-spacing: 0.02em;
+  }
+
+  .leather-tag{
+    background: linear-gradient(160deg, #2a1f16 0%, #1f1610 100%);
+    border: 1px solid #3d2d1d;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 14px rgba(0,0,0,0.5);
+    position:relative;
+  }
+  .leather-tag::before{
+    content:'';
+    position:absolute; top:10px; left:10px;
+    width:6px; height:6px; border-radius:50%;
+    background:#3d2d1d;
+    box-shadow: inset 0 1px 1px rgba(0,0,0,0.6), 0 0 0 2px #161310;
+  }
+
+  .grain-overlay{
+    position:fixed; inset:0; pointer-events:none; z-index:0; opacity:0.05; mix-blend-mode:overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  @keyframes stampIn{
+    0%{ transform: scale(2.2) rotate(-8deg); opacity:0; }
+    60%{ transform: scale(0.92) rotate(2deg); opacity:1; }
+    100%{ transform: scale(1) rotate(0deg); opacity:1; }
+  }
+  .anim-stamp{ animation: stampIn 0.45s cubic-bezier(.2,1.4,.4,1) both; }
+
+  @keyframes riseIn{
+    0%{ opacity:0; transform: translateY(14px); }
+    100%{ opacity:1; transform: translateY(0); }
+  }
+  .anim-rise{ animation: riseIn 0.32s ease-out both; }
+
+  @keyframes popIn{
+    0%{ opacity:0; transform: scale(0.85); }
+    100%{ opacity:1; transform: scale(1); }
+  }
+  .anim-pop{ animation: popIn 0.22s cubic-bezier(.3,1.6,.5,1) both; }
+
+  @keyframes pulseGlow{
+    0%,100%{ box-shadow: 0 0 0 0 rgba(211,47,47,0.55); }
+    50%{ box-shadow: 0 0 0 8px rgba(211,47,47,0); }
+  }
+  .pulse-late{ animation: pulseGlow 1.4s ease-out infinite; }
+
+  @keyframes wobbleCactus{
+    0%,100%{ transform: rotate(-2deg); }
+    50%{ transform: rotate(2deg); }
+  }
+  .wobble{ animation: wobbleCactus 3.2s ease-in-out infinite; }
+
+  @keyframes slideUpSheet{
+    0%{ transform: translateY(100%); }
+    100%{ transform: translateY(0); }
+  }
+  .anim-sheet{ animation: slideUpSheet 0.28s cubic-bezier(.2,.9,.3,1) both; }
+
+  ::-webkit-scrollbar{ height:8px; width:8px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  ::-webkit-scrollbar-thumb{ background:#3d2d1d; border-radius:8px; }
+  .scrollbar-none::-webkit-scrollbar{ display:none; }
+  .scrollbar-none{ -ms-overflow-style:none; scrollbar-width:none; }
+
+  .tap-active:active{ transform: scale(0.96); }
+  *{ -webkit-tap-highlight-color: transparent; }
+
+  .focus-ring:focus-visible{ outline: 2px solid var(--green); outline-offset: 2px; }
+
+  .transition-fast{ transition: all 0.15s cubic-bezier(.3,.7,.4,1); }
+  .transition-med{ transition: all 0.25s cubic-bezier(.3,.7,.4,1); }
+
+  @media (prefers-reduced-motion: reduce){
+    .anim-stamp, .anim-rise, .anim-pop, .pulse-late, .wobble, .anim-sheet{ animation: none !important; }
+  }
+</style>
+</head>
+<body class="font-body">
+<div id="root"></div>
+<div class="grain-overlay"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, useRef, useCallback } = React;
+
+/* ============================================================
+   FIREBASE CONFIG
+   Substitua pelos dados do seu projeto Firebase.
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyASBRpDyxqPhzwgXL7fOBN3Gte1pOF89Dw",
+  authDomain: "trilhasdosertao-e0c36.firebaseapp.com",
+  projectId: "trilhasdosertao-e0c36",
+  storageBucket: "trilhasdosertao-e0c36.firebasestorage.app",
+  messagingSenderId: "1053469673184",
+  appId: "1:1053469673184:web:04a8964e48863df322b285"
+};
+
+let app, db;
+try {
+  app = firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+  try { db.enablePersistence({ synchronizeTabs: true }); } catch(e) {}
+} catch (e) {
+  console.error("Erro ao iniciar Firebase:", e);
+}
+
+const ORDERS_COL = "pedidos";
+const SENHA_GARCOM = "trilhas2026";
+const SENHA_COZINHA = "fogo2026";
+
+/* ============================================================
+   DADOS DO MENU (extraídos do cardápio Trilhas do Sertão)
+   ============================================================ */
+const MENU = {
+  "Tradicionais": [
+    { id:"t1", nome:"Só o mi", preco:15, desc:"Pão brioche, carne, molho cheddar e maionese do sertão" },
+    { id:"t2", nome:"Só o pitel", preco:15, desc:"Pão brioche, carne, cream cheese e maionese do sertão" },
+    { id:"t3", nome:"Meu xodó", preco:17, desc:"Pão brioche, carne, mussarela, alface, tomate e maionese do sertão" },
+    { id:"t4", nome:"Bife do oião", preco:18, desc:"Pão brioche, alface, tomate, maionese do sertão, carne, mussarela e ovo" },
+    { id:"t5", nome:"Arretado", preco:20, desc:"Pão brioche, carne, mussarela, bacon, alface, tomate e maionese do sertão" },
+    { id:"t6", nome:"Indeciso", preco:20, desc:"Pão brioche, alface, tomate, carne, mussarela e calabresa e maionese do sertão" },
+    { id:"t7", nome:"Marmota", preco:21, desc:"Pão brioche, carne, mussarela, cream cheese e farofa de bacon crocante e maionese do sertão" },
+  ],
+  "Especiais": [
+    { id:"e1", nome:"Pai d' égua", preco:22, desc:"Pão brioche, 2 carnes, molho cheddar e maionese do sertão" },
+    { id:"e2", nome:"Matuto", preco:22, desc:"Pão brioche, 2 carnes, cream cheese e maionese do sertão" },
+    { id:"e3", nome:"Frangote", preco:23, desc:"Pão brioche, frango desfiado, bacon picado, mussarela, alface, tomate e maionese do sertão" },
+    { id:"e4", nome:"Vixe!", preco:25, desc:"Pão brioche, carne, bacon, mussarela, ovo, cream cheese, alface, tomate e maionese do sertão" },
+    { id:"e5", nome:"Abirobado", preco:27, desc:"Pão brioche, 2 carnes, 2 mussarela, barbecue, bacon e maionese do sertão" },
+    { id:"e6", nome:"Eita", preco:32, desc:"Pão brioche, 3 carnes, molho cheddar, bacon e maionese do sertão" },
+  ],
+  "Dog Prensado": [
+    { id:"d1", nome:"Doguito", preco:10, desc:"Pão, salsicha, ketchup, mostarda, parmesão, milho, batata palha e maionese do sertão" },
+    { id:"d2", nome:"Dogsmash", preco:13, desc:"Pão, mostarda, ketchup, parmesão, milho verde, batata palha, salsicha, carne e maionese do sertão" },
+    { id:"d3", nome:"Dogbacon", preco:13, desc:"Pão, salsicha, bacon, ketchup, mostarda, milho verde, parmesão, batata palha e maionese do sertão" },
+    { id:"d4", nome:"Dog-egg", preco:15, desc:"Pão, salsicha, ovo, bacon, milho verde, parmesão, batata palha, mostarda, ketchup e maionese do sertão" },
+    { id:"d5", nome:"Dogzilla", preco:15, desc:"Pão, mostarda, ketchup, parmesão, milho verde, batata palha, salsicha, carne, bacon e maionese do sertão" },
+  ],
+  "Árabes": [
+    { id:"a1", nome:"Qualquer um", preco:23, desc:"Pão, carne do sol desfiada, cream cheese, alface, tomate e maionese do sertão" },
+    { id:"a2", nome:"Gaiato", preco:24, desc:"Pão, 2 carnes, alface, tomate e maionese do sertão" },
+    { id:"a3", nome:"Caipira", preco:25, desc:"Pão, milho verde, alface, tomate, ovo, bacon picado, frango desfiado, mussarela e maionese do sertão" },
+    { id:"a4", nome:"Oxente", preco:26, desc:"Pão, carne do sol desfiada, mussarela, calabresa, ovo, alface, tomate e maionese do sertão" },
+    { id:"a5", nome:"Cabra da peste", preco:27, desc:"Pão, carne, frango desfiado, mussarela, bacon picado, alface, tomate e maionese do sertão" },
+    { id:"a6", nome:"Parrudo", preco:34, desc:"Pão, carne do sol desfiada, mussarela, carne, bacon picado, molho cheddar, ovo, alface, tomate e maionese do sertão" },
+  ],
+  "Acompanhamentos": [
+    { id:"ac1", nome:"Batata Simples (300g)", preco:14, desc:"" },
+    { id:"ac2", nome:"Batata Especial (300g)", preco:20, desc:"Com cheddar e bacon" },
+    { id:"ac3", nome:"Batata Sertãozinho (300g)", preco:24, desc:"Com carne do sol e cream cheese" },
+    { id:"ac4", nome:"Onion Rings", preco:18, desc:"12 anéis de cebola empanada e frita" },
+  ],
+  "Adicionais": [
+    { id:"ad1", nome:"Ovo", preco:2, desc:"" },
+    { id:"ad2", nome:"Salada", preco:2, desc:"" },
+    { id:"ad3", nome:"Cheddar (ou cream cheese)", preco:4, desc:"" },
+    { id:"ad4", nome:"Bacon", preco:4, desc:"" },
+    { id:"ad5", nome:"Cheddar/Bacon (na batata)", preco:6, desc:"" },
+    { id:"ad6", nome:"Carne", preco:8, desc:"" },
+    { id:"ad7", nome:"Frango desfiado", preco:7, desc:"" },
+    { id:"ad8", nome:"Carne do sol", preco:8, desc:"" },
+  ],
+  "Bebidas": [
+    { id:"b1", nome:"Suco (300ml)", preco:6, desc:"" },
+    { id:"b2", nome:"Água s/gás", preco:3, desc:"" },
+    { id:"b3", nome:"Água c/gás", preco:4, desc:"" },
+    { id:"b4", nome:"Refri Lata", preco:6, desc:"" },
+    { id:"b5", nome:"Refri 1L", preco:10, desc:"" },
+    { id:"b6", nome:"Heineken", preco:8, desc:"" },
+    { id:"b7", nome:"Budweiser", preco:7, desc:"" },
+  ],
+};
+
+const CATEGORY_ORDER = ["Tradicionais","Especiais","Dog Prensado","Árabes","Acompanhamentos","Adicionais","Bebidas"];
+
+const fmtMoney = (v) => "R$ " + v.toFixed(2).replace(".", ",");
+
+const STATUS = {
+  RECEBIDO: "recebido",
+  PREPARO: "preparo",
+  PRONTO: "pronto",
+  ENTREGUE: "entregue",
+  FECHADO: "fechado",
+};
+
+const STATUS_LABEL = {
+  [STATUS.RECEBIDO]: "Recebido",
+  [STATUS.PREPARO]: "Na brasa",
+  [STATUS.PRONTO]: "Pronto",
+  [STATUS.ENTREGUE]: "Entregue",
+  [STATUS.FECHADO]: "Fechado",
+};
+
+function uid(){
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+}
+
+function minutesSince(ts){
+  if(!ts) return 0;
+  const ms = Date.now() - ts;
+  return Math.max(0, Math.floor(ms/60000));
+}
+
+function formatClock(ts){
+  const d = new Date(ts);
+  return d.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+}
+
+/* ============================================================
+   MASCOTE: Cacto sertanejo de chapéu, bandana e bigode
+   ============================================================ */
+function CactusMascot({ className = "w-24 h-24", wobble = true, holding = "fries" }) {
+  return (
+    <svg viewBox="0 0 200 220" className={(wobble ? "wobble " : "") + className} xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="100" cy="208" rx="46" ry="8" fill="#000" opacity="0.35" />
+      <path d="M100 60 C 70 60, 55 85, 58 115 C 60 145, 70 175, 75 195 L 125 195 C 130 175, 140 145, 142 115 C 145 85, 130 60, 100 60 Z" fill="#3FA34D" stroke="#2C7A39" strokeWidth="3"/>
+      <path d="M58 120 C 35 118, 25 100, 32 85 C 38 95, 48 102, 60 105 Z" fill="#3FA34D" stroke="#2C7A39" strokeWidth="3"/>
+      <path d="M142 120 C 165 110, 172 88, 162 72 C 158 85, 150 96, 140 102 Z" fill="#3FA34D" stroke="#2C7A39" strokeWidth="3"/>
+      {[...Array(7)].map((_,i)=>(
+        <line key={i} x1={72 + i*8} y1={150 + (i%2)*10} x2={68 + i*8} y2={160 + (i%2)*10} stroke="#1f5a29" strokeWidth="2" strokeLinecap="round"/>
+      ))}
+      <ellipse cx="100" cy="58" rx="48" ry="11" fill="#7a4a23" stroke="#522f15" strokeWidth="3"/>
+      <path d="M75 58 C 75 35, 85 25, 100 25 C 115 25, 125 35, 125 58 Z" fill="#8a5a2c" stroke="#522f15" strokeWidth="3"/>
+      <rect x="80" y="50" width="40" height="7" rx="3" fill="#522f15"/>
+      <circle cx="86" cy="92" r="5.5" fill="#1a1a1a"/>
+      <circle cx="114" cy="92" r="5.5" fill="#1a1a1a"/>
+      <circle cx="88" cy="90" r="1.6" fill="#fff"/>
+      <circle cx="116" cy="90" r="1.6" fill="#fff"/>
+      <path d="M82 104 C 90 110, 96 110, 100 106 C 104 110, 110 110, 118 104 C 114 116, 104 118, 100 114 C 96 118, 86 116, 82 104 Z" fill="#5a3a1a"/>
+      <path d="M92 112 Q100 120 108 112" stroke="#1a1a1a" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+      <path d="M62 128 C 80 138, 120 138, 138 128 L 134 140 C 115 148, 85 148, 66 140 Z" fill="#D32F2F" stroke="#a02323" strokeWidth="2"/>
+      <path d="M66 140 L 58 152 L 70 148 Z" fill="#D32F2F" stroke="#a02323" strokeWidth="2"/>
+      <path d="M134 140 L 142 152 L 130 148 Z" fill="#D32F2F" stroke="#a02323" strokeWidth="2"/>
+      {holding === "fries" && (
+        <g transform="translate(150,55) rotate(15)">
+          <path d="M-10 30 L10 30 L7 -5 L-7 -5 Z" fill="#D32F2F"/>
+          <rect x="-9" y="-22" width="4" height="22" rx="2" fill="#FFD54F"/>
+          <rect x="-2" y="-26" width="4" height="26" rx="2" fill="#FFD54F"/>
+          <rect x="5" y="-20" width="4" height="20" rx="2" fill="#FFD54F"/>
+        </g>
+      )}
+    </svg>
+  );
+}
+
+function LogoMark({ size = "text-3xl" }) {
+  return (
+    <div className="flex flex-col items-center select-none">
+      <div className={"font-display brand-burn " + size} style={{color:"var(--green)"}}>Trilhas do Sertão</div>
+      <div className="font-display text-sm -mt-1" style={{color:"var(--orange)"}}>★ Burger ★</div>
+    </div>
+  );
+}
+
+const Icon = {
+  Plus: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" {...p}><path d="M12 5v14M5 12h14"/></svg>),
+  Minus: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" {...p}><path d="M5 12h14"/></svg>),
+  Cart: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>),
+  Clock: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>),
+  Check: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M20 6 9 17l-5-5"/></svg>),
+  Alert: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/></svg>),
+  Trash: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>),
+  Edit: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>),
+  Receipt: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M4 2h16v20l-3-2-3 2-3-2-3 2-3-2-1 2V2Z"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>),
+  ArrowLeft: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M19 12H5M12 19l-7-7 7-7"/></svg>),
+  Lock: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>),
+  Bell: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>),
+  ChefHat: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/><path d="M6 17h12"/></svg>),
+  Flame: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M8.5 14.5A2.5 2.5 0 0 0 11 17a2.5 2.5 0 0 0 2.5-2.5c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7.5 7.5 0 1 1-15 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5"/></svg>),
+  X: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M18 6 6 18M6 6l12 12"/></svg>),
+  User: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>),
+};
+
+/* ============================================================
+   TELA: Seleção de perfil (porta de entrada)
+   ============================================================ */
+function RoleSelect({ onSelect }) {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 py-12 relative overflow-hidden" style={{background:"radial-gradient(ellipse at top, #1a1410 0%, #0a0a0a 60%)"}}>
+      <div className="anim-rise flex flex-col items-center gap-3 mb-10">
+        <CactusMascot className="w-32 h-32" />
+        <LogoMark size="text-4xl" />
+        <p className="text-[var(--cream-dim)] text-sm mt-1 tracking-wide">Escolha como você vai entrar</p>
+      </div>
+
+      <div className="w-full max-w-sm flex flex-col gap-4 anim-rise" style={{animationDelay:'0.1s'}}>
+        <button onClick={() => onSelect('cliente')}
+          className="tap-active transition-fast leather-tag rounded-2xl px-6 py-5 flex items-center gap-4 text-left focus-ring">
+          <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style={{background:"rgba(74,222,128,0.12)"}}>
+            <Icon.User className="w-6 h-6" style={{color:"var(--green)"}} />
+          </div>
+          <div>
+            <div className="font-display text-xl" style={{color:"var(--cream)"}}>Fazer Pedido</div>
+            <div className="text-xs text-[var(--cream-dim)]">Sou cliente, quero pedir</div>
+          </div>
+        </button>
+
+        <button onClick={() => onSelect('garcom')}
+          className="tap-active transition-fast leather-tag rounded-2xl px-6 py-5 flex items-center gap-4 text-left focus-ring">
+          <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style={{background:"rgba(255,167,38,0.12)"}}>
+            <Icon.Bell className="w-6 h-6" style={{color:"var(--orange)"}} />
+          </div>
+          <div>
+            <div className="font-display text-xl" style={{color:"var(--cream)"}}>Garçom</div>
+            <div className="text-xs text-[var(--cream-dim)]">Painel de atendimento e contas</div>
+          </div>
+        </button>
+
+        <button onClick={() => onSelect('cozinha')}
+          className="tap-active transition-fast leather-tag rounded-2xl px-6 py-5 flex items-center gap-4 text-left focus-ring">
+          <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style={{background:"rgba(211,47,47,0.12)"}}>
+            <Icon.ChefHat className="w-6 h-6" style={{color:"var(--red)"}} />
+          </div>
+          <div>
+            <div className="font-display text-xl" style={{color:"var(--cream)"}}>Cozinha</div>
+            <div className="text-xs text-[var(--cream-dim)]">Kanban de produção</div>
+          </div>
+        </button>
+      </div>
+
+      <p className="text-[10px] text-neutral-600 mt-12 tracking-widest uppercase">Trilhasdosertao</p>
+    </div>
+  );
+}
+
+/* ============================================================
+   TELA: Login com senha (garçom / cozinha)
+   ============================================================ */
+function PasswordGate({ role, onBack, onSuccess }) {
+  const [pwd, setPwd] = useState("");
+  const [err, setErr] = useState(false);
+  const correct = role === 'garcom' ? SENHA_GARCOM : SENHA_COZINHA;
+  const title = role === 'garcom' ? "Acesso do Garçom" : "Acesso da Cozinha";
+
+  const submit = (e) => {
+    e.preventDefault();
+    if (pwd === correct) {
+      onSuccess();
+    } else {
+      setErr(true);
+      setPwd("");
+      setTimeout(() => setErr(false), 1800);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 relative" style={{background:"radial-gradient(ellipse at top, #1a1410 0%, #0a0a0a 60%)"}}>
+      <button onClick={onBack} className="absolute top-6 left-6 text-[var(--cream-dim)] hover:text-[var(--cream)] flex items-center gap-1 text-sm transition-fast focus-ring rounded">
+        <Icon.ArrowLeft className="w-4 h-4" /> voltar
+      </button>
+
+      <div className="anim-rise flex flex-col items-center gap-4 w-full max-w-xs">
+        <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{background:"rgba(255,167,38,0.12)"}}>
+          <Icon.Lock className="w-7 h-7" style={{color:"var(--orange)"}} />
+        </div>
+        <h1 className="font-display text-2xl text-center" style={{color:"var(--cream)"}}>{title}</h1>
+
+        <form onSubmit={submit} className="w-full flex flex-col gap-3 mt-2">
+          <input
+            type="password"
+            autoFocus
+            value={pwd}
+            onChange={(e) => setPwd(e.target.value)}
+            placeholder="Senha de acesso"
+            className={
+              "w-full rounded-xl px-4 py-3 bg-[var(--panel)] border-2 text-[var(--cream)] font-body text-center tracking-widest focus-ring outline-none transition-fast " +
+              (err ? "border-red-600" : "border-[#3d2d1d] focus:border-[var(--green)]")
+            }
+          />
+          {err && <p className="text-red-400 text-xs text-center anim-pop">Senha incorreta. Tenta de novo.</p>}
+          <button type="submit" className="tap-active transition-fast w-full rounded-xl py-3 font-display text-lg" style={{background:"var(--green)", color:"#0a0a0a"}}>
+            Entrar
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   TELA: Cliente — identificação por nome
+   ============================================================ */
+function NameGate({ onBack, onSubmit }) {
+  const [nome, setNome] = useState("");
+  const submit = (e) => {
+    e.preventDefault();
+    const trimmed = nome.trim();
+    if (trimmed.length < 2) return;
+    onSubmit(trimmed);
+  };
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 relative" style={{background:"radial-gradient(ellipse at top, #1a1410 0%, #0a0a0a 60%)"}}>
+      <button onClick={onBack} className="absolute top-6 left-6 text-[var(--cream-dim)] hover:text-[var(--cream)] flex items-center gap-1 text-sm transition-fast focus-ring rounded">
+        <Icon.ArrowLeft className="w-4 h-4" /> voltar
+      </button>
+      <div className="anim-rise flex flex-col items-center gap-4 w-full max-w-xs text-center">
+        <CactusMascot className="w-28 h-28" />
+        <h1 className="font-display text-2xl" style={{color:"var(--cream)"}}>Qual seu nome?</h1>
+        <p className="text-[var(--cream-dim)] text-sm -mt-2">É assim que o garçom vai te chamar quando o pedido sair</p>
+        <form onSubmit={submit} className="w-full flex flex-col gap-3 mt-2">
+          <input
+            type="text"
+            autoFocus
+            maxLength={30}
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            placeholder="Seu nome"
+            className="w-full rounded-xl px-4 py-3 bg-[var(--panel)] border-2 border-[#3d2d1d] text-[var(--cream)] font-body text-center focus-ring outline-none transition-fast focus:border-[var(--green)]"
+          />
+          <button type="submit" disabled={nome.trim().length < 2}
+            className="tap-active transition-fast w-full rounded-xl py-3 font-display text-lg disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{background:"var(--green)", color:"#0a0a0a"}}>
+            Ver cardápio
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   COMPONENTE: Card de item do menu
+   ============================================================ */
+function MenuItemCard({ item, qtyInCart, onAdd, onRemove }) {
+  return (
+    <div className="leather-tag rounded-2xl p-4 flex items-center gap-3 anim-rise">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-baseline justify-between gap-2">
+          <h3 className="font-display text-lg leading-tight" style={{color:"var(--orange)"}}>{item.nome}</h3>
+          <span className="font-body font-bold text-sm flex-shrink-0" style={{color:"var(--green)"}}>{fmtMoney(item.preco)}</span>
+        </div>
+        {item.desc && <p className="text-xs text-[var(--cream-dim)] mt-1 leading-snug">{item.desc}</p>}
+      </div>
+      <div className="flex items-center gap-2 flex-shrink-0">
+        {qtyInCart > 0 && (
+          <>
+            <button onClick={() => onRemove(item)} className="tap-active transition-fast w-8 h-8 rounded-full flex items-center justify-center bg-[#2a1f16] border border-[#3d2d1d] focus-ring" aria-label={"Remover " + item.nome}>
+              <Icon.Minus className="w-4 h-4" style={{color:"var(--cream)"}} />
+            </button>
+            <span className="font-display w-5 text-center" style={{color:"var(--cream)"}}>{qtyInCart}</span>
+          </>
+        )}
+        <button onClick={() => onAdd(item)} className="tap-active transition-fast w-8 h-8 rounded-full flex items-center justify-center focus-ring" style={{background:"var(--green)"}} aria-label={"Adicionar " + item.nome}>
+          <Icon.Plus className="w-4 h-4" style={{color:"#0a0a0a"}} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   TELA: Cardápio do cliente
+   ============================================================ */
+function MenuScreen({ nome, cart, setCart, onBack, onGoCart, onGoTab }) {
+  const [activeCat, setActiveCat] = useState(CATEGORY_ORDER[0]);
+  const scrollRef = useRef(null);
+
+  const addItem = (item) => {
+    setCart(prev => {
+      const existing = prev.find(p => p.id === item.id);
+      if (existing) return prev.map(p => p.id === item.id ? { ...p, qtd: p.qtd + 1 } : p);
+      return [...prev, { ...item, qtd: 1 }];
+    });
+  };
+  const removeItem = (item) => {
+    setCart(prev => {
+      const existing = prev.find(p => p.id === item.id);
+      if (!existing) return prev;
+      if (existing.qtd <= 1) return prev.filter(p => p.id !== item.id);
+      return prev.map(p => p.id === item.id ? { ...p, qtd: p.qtd - 1 } : p);
+    });
+  };
+
+  const cartQty = (id) => { const f = cart.find(c => c.id === id); return f ? f.qtd : 0; };
+  const totalItens = cart.reduce((s, c) => s + c.qtd, 0);
+  const totalValor = cart.reduce((s, c) => s + c.qtd * c.preco, 0);
+
+  return (
+    <div className="min-h-screen pb-28" style={{background:"var(--bg)"}}>
+      <header className="sticky top-0 z-30 px-4 pt-4 pb-3" style={{background:"linear-gradient(180deg, var(--bg) 70%, transparent)"}}>
+        <div className="flex items-center justify-between mb-3">
+          <button onClick={onBack} className="text-[var(--cream-dim)] hover:text-[var(--cream)] flex items-center gap-1 text-sm transition-fast focus-ring rounded">
+            <Icon.ArrowLeft className="w-4 h-4" /> saída
+          </button>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-[var(--cream-dim)]">Olá,</span>
+            <span className="text-sm font-semibold" style={{color:"var(--green)"}}>{nome}</span>
+          </div>
+          <button onClick={onGoTab} className="text-[var(--cream-dim)] hover:text-[var(--cream)] flex items-center gap-1 text-sm transition-fast focus-ring rounded">
+            <Icon.Receipt className="w-4 h-4" /> comanda
+          </button>
+        </div>
+        <div className="flex justify-center mb-2">
+          <LogoMark size="text-xl" />
+        </div>
+        {/* abas de categoria - menu interativo */}
+        <div ref={scrollRef} className="flex gap-2 overflow-x-auto scrollbar-none pb-1 -mx-4 px-4">
+          {CATEGORY_ORDER.map(cat => (
+            <button key={cat} onClick={() => setActiveCat(cat)}
+              className={
+                "tap-active transition-fast flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold border focus-ring whitespace-nowrap " +
+                (activeCat === cat ? "border-transparent" : "border-[#3d2d1d] text-[var(--cream-dim)]")
+              }
+              style={activeCat === cat ? { background:"var(--green)", color:"#0a0a0a" } : {}}>
+              {cat}
+            </button>
+          ))}
+        </div>
+      </header>
+
+      <main className="px-4 pt-2 flex flex-col gap-3">
+        {MENU[activeCat].map(item => (
+          <MenuItemCard key={item.id} item={item} qtyInCart={cartQty(item.id)} onAdd={addItem} onRemove={removeItem} />
+        ))}
+      </main>
+
+      {totalItens > 0 && (
+        <button onClick={onGoCart}
+          className="tap-active transition-med fixed bottom-5 left-4 right-4 rounded-2xl px-5 py-4 flex items-center justify-between shadow-2xl anim-pop focus-ring z-40"
+          style={{background:"var(--red)"}}>
+          <div className="flex items-center gap-2 text-white">
+            <Icon.Cart className="w-5 h-5" />
+            <span className="font-bold">{totalItens} {totalItens === 1 ? 'item' : 'itens'}</span>
+          </div>
+          <span className="font-display text-lg text-white">{fmtMoney(totalValor)}</span>
+        </button>
+      )}
+    </div>
+  );
+}
+
+function useOrders() {
+  const [orders, setOrders] = useState([]);
+  const [connected, setConnected] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!db) { setError("Firebase não configurado."); return; }
+    const unsub = db.collection(ORDERS_COL)
+      .orderBy("criadoEm", "desc")
+      .onSnapshot(
+        (snap) => {
+          setConnected(true);
+          setError(null);
+          const list = [];
+          snap.forEach(doc => list.push({ docId: doc.id, ...doc.data() }));
+          setOrders(list);
+        },
+        (err) => {
+          console.error("Firestore erro:", err);
+          setConnected(false);
+          setError(err.code || "erro-desconhecido");
+        }
+      );
+    return () => unsub();
+  }, []);
+
+  const addOrder = useCallback(async (order) => {
+    if (!db) throw new Error("sem-firebase");
+    await db.collection(ORDERS_COL).doc(order.id).set(order);
+  }, []);
+
+  const updateOrder = useCallback(async (docId, patch) => {
+    if (!db) throw new Error("sem-firebase");
+    await db.collection(ORDERS_COL).doc(docId).update(patch);
+  }, []);
+
+  const deleteOrder = useCallback(async (docId) => {
+    if (!db) throw new Error("sem-firebase");
+    await db.collection(ORDERS_COL).doc(docId).delete();
+  }, []);
+
+  return { orders, connected, error, addOrder, updateOrder, deleteOrder };
+}
+
+/* Beep simples via WebAudio para notificar novo pedido (sem assets externos) */
+function playBeep(times = 1) {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new Ctx();
+    for (let i = 0; i < times; i++) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = 880;
+      gain.gain.value = 0.15;
+      osc.connect(gain); gain.connect(ctx.destination);
+      const start = ctx.currentTime + i * 0.25;
+      osc.start(start);
+      gain.gain.setValueAtTime(0.15, start);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.18);
+      osc.stop(start + 0.2);
+    }
+  } catch (e) { /* silencioso se navegador bloquear áudio */ }
+}
+
+/* ============================================================
+   TOAST (notificações de erro/sucesso)
+   ============================================================ */
+function useToasts() {
+  const [toasts, setToasts] = useState([]);
+  const push = useCallback((msg, type = "info") => {
+    const id = uid();
+    setToasts(t => [...t, { id, msg, type }]);
+    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 4200);
+  }, []);
+  const dismiss = useCallback((id) => setToasts(t => t.filter(x => x.id !== id)), []);
+  return { toasts, push, dismiss };
+}
+
+/* ============================================================
+   TELA: Carrinho — revisão antes de enviar o pedido
+   ============================================================ */
+function CartScreen({ nome, cart, setCart, onBack, onConfirm, sending }) {
+  const inc = (id) => setCart(prev => prev.map(p => p.id === id ? { ...p, qtd: p.qtd + 1 } : p));
+  const dec = (id) => setCart(prev => {
+    const f = prev.find(p => p.id === id);
+    if (f && f.qtd <= 1) return prev.filter(p => p.id !== id);
+    return prev.map(p => p.id === id ? { ...p, qtd: p.qtd - 1 } : p);
+  });
+  const remove = (id) => setCart(prev => prev.filter(p => p.id !== id));
+  const total = cart.reduce((s, c) => s + c.qtd * c.preco, 0);
+
+  return (
+    <div className="min-h-screen pb-32" style={{background:"var(--bg)"}}>
+      <header className="px-4 pt-4 pb-3 flex items-center gap-3">
+        <button onClick={onBack} className="text-[var(--cream-dim)] hover:text-[var(--cream)] focus-ring rounded">
+          <Icon.ArrowLeft className="w-5 h-5" />
+        </button>
+        <h1 className="font-display text-xl" style={{color:"var(--cream)"}}>Seu pedido</h1>
+      </header>
+
+      {cart.length === 0 ? (
+        <div className="flex flex-col items-center justify-center text-center px-6 py-20 gap-3 anim-rise">
+          <CactusMascot className="w-20 h-20" wobble={false} />
+          <p className="text-[var(--cream-dim)]">Sua sacola tá vazia. Volta lá e escolhe um lanche!</p>
+        </div>
+      ) : (
+        <main className="px-4 flex flex-col gap-3">
+          {cart.map(item => (
+            <div key={item.id} className="leather-tag rounded-2xl p-4 flex items-center gap-3 anim-rise">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-display text-base" style={{color:"var(--orange)"}}>{item.nome}</h3>
+                <span className="text-xs text-[var(--cream-dim)]">{fmtMoney(item.preco)} cada</span>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button onClick={() => dec(item.id)} className="tap-active transition-fast w-7 h-7 rounded-full flex items-center justify-center bg-[#2a1f16] border border-[#3d2d1d] focus-ring">
+                  <Icon.Minus className="w-3.5 h-3.5" style={{color:"var(--cream)"}} />
+                </button>
+                <span className="font-display w-5 text-center" style={{color:"var(--cream)"}}>{item.qtd}</span>
+                <button onClick={() => inc(item.id)} className="tap-active transition-fast w-7 h-7 rounded-full flex items-center justify-center focus-ring" style={{background:"var(--green)"}}>
+                  <Icon.Plus className="w-3.5 h-3.5" style={{color:"#0a0a0a"}} />
+                </button>
+              </div>
+              <span className="font-bold text-sm w-16 text-right flex-shrink-0" style={{color:"var(--green)"}}>{fmtMoney(item.qtd * item.preco)}</span>
+              <button onClick={() => remove(item.id)} className="tap-active transition-fast text-neutral-600 hover:text-red-500 focus-ring flex-shrink-0">
+                <Icon.Trash className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </main>
+      )}
+
+      {cart.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 p-4 anim-rise" style={{background:"linear-gradient(0deg, var(--bg) 60%, transparent)"}}>
+          <div className="leather-tag rounded-2xl p-4">
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-[var(--cream-dim)] text-sm">Total</span>
+              <span className="font-display text-2xl" style={{color:"var(--green)"}}>{fmtMoney(total)}</span>
+            </div>
+            <button onClick={onConfirm} disabled={sending}
+              className="tap-active transition-fast w-full rounded-xl py-3.5 font-display text-lg disabled:opacity-50 flex items-center justify-center gap-2"
+              style={{background:"var(--red)", color:"#fff"}}>
+              {sending ? "Enviando..." : ("Confirmar pedido, " + nome.split(' ')[0])}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   TELA: Comanda do cliente — acompanhamento + pedir conta
+   ============================================================ */
+function TabScreen({ nome, myOrders, onBack, onAddMore, onRequestBill, requestingBill }) {
+  const total = myOrders.reduce((sum, o) => sum + o.itens.reduce((s, i) => s + i.qtd * i.preco, 0), 0);
+  const aberta = myOrders.some(o => o.status !== STATUS.FECHADO);
+
+  return (
+    <div className="min-h-screen pb-32" style={{background:"var(--bg)"}}>
+      <header className="px-4 pt-4 pb-3 flex items-center gap-3">
+        <button onClick={onBack} className="text-[var(--cream-dim)] hover:text-[var(--cream)] focus-ring rounded">
+          <Icon.ArrowLeft className="w-5 h-5" />
+        </button>
+        <h1 className="font-display text-xl" style={{color:"var(--cream)"}}>Comanda de {nome}</h1>
+      </header>
+
+      {myOrders.length === 0 ? (
+        <div className="flex flex-col items-center justify-center text-center px-6 py-20 gap-3 anim-rise">
+          <CactusMascot className="w-20 h-20" />
+          <p className="text-[var(--cream-dim)]">Você ainda não fez nenhum pedido.</p>
+          <button onClick={onAddMore} className="tap-active transition-fast mt-2 px-5 py-2.5 rounded-xl font-display" style={{background:"var(--green)", color:"#0a0a0a"}}>
+            Ver cardápio
+          </button>
+        </div>
+      ) : (
+        <main className="px-4 flex flex-col gap-4">
+          {myOrders.map(order => (
+            <div key={order.id} className="leather-tag rounded-2xl p-4 anim-rise">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs text-[var(--cream-dim)]">{formatClock(order.criadoEm)}</span>
+                <StatusPill status={order.status} />
+              </div>
+              <div className="flex flex-col gap-1.5 mb-2">
+                {order.itens.map((it, idx) => (
+                  <div key={idx} className="flex justify-between text-sm">
+                    <span style={{color:"var(--cream)"}}>{it.qtd}x {it.nome}</span>
+                    <span className="text-[var(--cream-dim)]">{fmtMoney(it.qtd * it.preco)}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-between items-center pt-2 border-t border-[#3d2d1d]">
+                <span className="text-xs text-[var(--cream-dim)]">Subtotal</span>
+                <span className="font-bold text-sm" style={{color:"var(--orange)"}}>
+                  {fmtMoney(order.itens.reduce((s,i)=>s+i.qtd*i.preco,0))}
+                </span>
+              </div>
+            </div>
+          ))}
+
+          <button onClick={onAddMore} className="tap-active transition-fast w-full rounded-xl py-3 font-display border-2 border-dashed border-[#3d2d1d] text-[var(--cream-dim)] flex items-center justify-center gap-2">
+            <Icon.Plus className="w-4 h-4" /> Pedir mais um lanche
+          </button>
+        </main>
+      )}
+
+      {myOrders.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 p-4" style={{background:"linear-gradient(0deg, var(--bg) 60%, transparent)"}}>
+          <div className="leather-tag rounded-2xl p-4">
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-[var(--cream-dim)] text-sm">Total da comanda</span>
+              <span className="font-display text-2xl" style={{color:"var(--green)"}}>{fmtMoney(total)}</span>
+            </div>
+            {aberta ? (
+              <button onClick={onRequestBill} disabled={requestingBill}
+                className="tap-active transition-fast w-full rounded-xl py-3.5 font-display text-lg disabled:opacity-50 flex items-center justify-center gap-2"
+                style={{background:"var(--orange)", color:"#0a0a0a"}}>
+                <Icon.Receipt className="w-5 h-5" />
+                {requestingBill ? "Chamando o garçom..." : "Pedir a conta"}
+              </button>
+            ) : (
+              <div className="w-full rounded-xl py-3.5 font-display text-center" style={{background:"#1a1714", color:"var(--cream-dim)"}}>
+                Conta encerrada — valeu, {nome.split(' ')[0]}!
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StatusPill({ status, late }) {
+  const cfg = {
+    [STATUS.RECEBIDO]: { bg:"rgba(255,167,38,0.15)", color:"var(--orange)", label:"Recebido" },
+    [STATUS.PREPARO]: { bg:"rgba(211,47,47,0.15)", color:"var(--red)", label:"Na brasa" },
+    [STATUS.PRONTO]: { bg:"rgba(74,222,128,0.15)", color:"var(--green)", label:"Pronto" },
+    [STATUS.ENTREGUE]: { bg:"rgba(148,163,184,0.15)", color:"#94a3b8", label:"Entregue" },
+    [STATUS.FECHADO]: { bg:"rgba(148,163,184,0.1)", color:"#64748b", label:"Fechado" },
+  }[status] || { bg:"#333", color:"#999", label:status };
+  return (
+    <span className={"text-xs font-bold px-3 py-1 rounded-full " + (late ? "pulse-late" : "")} style={{background:cfg.bg, color:cfg.color}}>
+      {cfg.label}
+    </span>
+  );
+}
+
+function ToastStack({ toasts, dismiss }) {
+  return (
+    <div className="fixed top-4 right-4 left-4 sm:left-auto z-[200] flex flex-col gap-2 items-end pointer-events-none">
+      {toasts.map(t => (
+        <div key={t.id}
+          onClick={() => dismiss(t.id)}
+          className={
+            "pointer-events-auto anim-pop max-w-sm w-full sm:w-80 rounded-xl px-4 py-3 shadow-2xl border font-body text-sm cursor-pointer " +
+            (t.type === "error" ? "bg-red-950 border-red-600 text-red-100" :
+             t.type === "success" ? "bg-emerald-950 border-emerald-600 text-emerald-100" :
+             "bg-neutral-900 border-neutral-700 text-neutral-100")
+          }>
+          <div className="flex items-start gap-2">
+            {t.type === "error" && <Icon.Alert className="w-5 h-5 mt-0.5 flex-shrink-0" />}
+            {t.type === "success" && <Icon.Check className="w-5 h-5 mt-0.5 flex-shrink-0" />}
+            {t.type === "info" && <Icon.Bell className="w-5 h-5 mt-0.5 flex-shrink-0" />}
+            <span>{t.msg}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ============================================================
+   COMPONENTE: Card de pedido (usado por Cozinha e Garçom)
+   ============================================================ */
+function OrderCard({ order, now, lateMinutes = 12, children }) {
+  const mins = Math.floor((now - order.criadoEm) / 60000);
+  const late = order.status !== STATUS.PRONTO && order.status !== STATUS.ENTREGUE && order.status !== STATUS.FECHADO && mins >= lateMinutes;
+
+  return (
+    <div className={"leather-tag rounded-2xl p-4 anim-rise " + (late ? "pulse-late border-red-700" : "")}>
+      <div className="flex justify-between items-start mb-2">
+        <div>
+          <div className="font-display text-lg" style={{color:"var(--cream)"}}>{order.nome}</div>
+          <div className="text-[11px] text-[var(--cream-dim)]">{formatClock(order.criadoEm)}</div>
+        </div>
+        <div className={"flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full " + (late ? "bg-red-900 text-red-200" : "bg-[#2a1f16] text-[var(--cream-dim)]")}>
+          <Icon.Clock className="w-3 h-3" />
+          {mins} min
+        </div>
+      </div>
+      <div className="flex flex-col gap-1 mb-3">
+        {order.itens.map((it, idx) => (
+          <div key={idx} className="text-sm flex justify-between" style={{color:"var(--cream)"}}>
+            <span>{it.qtd}x {it.nome}</span>
+          </div>
+        ))}
+      </div>
+      {order.contaPedida && order.status !== STATUS.FECHADO && (
+        <div className="flex items-center gap-1.5 text-xs font-bold mb-2 px-2 py-1 rounded-lg w-fit" style={{background:"rgba(255,167,38,0.15)", color:"var(--orange)"}}>
+          <Icon.Receipt className="w-3.5 h-3.5" /> Conta pedida
+        </div>
+      )}
+      {children}
+    </div>
+  );
+}
+
+/* ============================================================
+   TELA: Cozinha — Kanban (Recebido → Na brasa → Pronto)
+   ============================================================ */
+function KitchenScreen({ orders, updateOrder, onBack, now, pushToast }) {
+  const cols = [
+    { key: STATUS.RECEBIDO, label: "Recebido", next: STATUS.PREPARO, accent: "var(--orange)" },
+    { key: STATUS.PREPARO, label: "Na brasa", next: STATUS.PRONTO, accent: "var(--red)" },
+    { key: STATUS.PRONTO, label: "Pronto", next: null, accent: "var(--green)" },
+  ];
+
+  const visible = orders.filter(o => o.status !== STATUS.ENTREGUE && o.status !== STATUS.FECHADO);
+
+  const advance = async (order, next) => {
+    try {
+      await updateOrder(order.docId, { status: next, atualizadoEm: Date.now() });
+    } catch (e) {
+      pushToast("Não consegui atualizar o pedido. " + (e.code || ""), "error");
+    }
+  };
+
+  return (
+    <div className="min-h-screen" style={{background:"var(--bg)"}}>
+      <header className="px-4 pt-4 pb-3 flex items-center justify-between sticky top-0 z-30" style={{background:"linear-gradient(180deg, var(--bg) 75%, transparent)"}}>
+        <button onClick={onBack} className="text-[var(--cream-dim)] hover:text-[var(--cream)] flex items-center gap-1 text-sm focus-ring rounded">
+          <Icon.ArrowLeft className="w-4 h-4" /> saída
+        </button>
+        <div className="flex items-center gap-2">
+          <Icon.Flame className="w-5 h-5" style={{color:"var(--red)"}} />
+          <span className="font-display text-lg" style={{color:"var(--cream)"}}>Cozinha</span>
+        </div>
+        <span className="text-xs text-[var(--cream-dim)]">{visible.length} ativos</span>
+      </header>
+
+      <main className="px-3 grid grid-cols-1 md:grid-cols-3 gap-4 pb-8">
+        {cols.map(col => {
+          const items = visible.filter(o => o.status === col.key).sort((a,b)=>a.criadoEm-b.criadoEm);
+          return (
+            <div key={col.key} className="flex flex-col gap-3">
+              <div className="flex items-center gap-2 px-2 sticky top-[68px] z-20 py-2" style={{background:"var(--bg)"}}>
+                <span className="w-2.5 h-2.5 rounded-full" style={{background:col.accent}}></span>
+                <h2 className="font-display text-base" style={{color:col.accent}}>{col.label}</h2>
+                <span className="text-xs text-[var(--cream-dim)]">({items.length})</span>
+              </div>
+              <div className="flex flex-col gap-3 px-1 min-h-[80px]">
+                {items.length === 0 && (
+                  <p className="text-xs text-neutral-600 text-center py-6">Nenhum pedido aqui</p>
+                )}
+                {items.map(order => (
+                  <OrderCard key={order.docId} order={order} now={now}>
+                    {col.next && (
+                      <button onClick={() => advance(order, col.next)}
+                        className="tap-active transition-fast w-full rounded-xl py-2.5 font-display text-sm flex items-center justify-center gap-2"
+                        style={{background:col.key===STATUS.RECEBIDO ? "var(--red)" : "var(--green)", color:col.key===STATUS.RECEBIDO ? "#fff" : "#0a0a0a"}}>
+                        {col.key === STATUS.RECEBIDO ? (<><Icon.Flame className="w-4 h-4"/> Ir pra brasa</>) : (<><Icon.Check className="w-4 h-4"/> Marcar pronto</>)}
+                      </button>
+                    )}
+                    {!col.next && (
+                      <div className="text-xs text-center py-1" style={{color:"var(--green)"}}>Aguardando garçom retirar</div>
+                    )}
+                  </OrderCard>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </main>
+    </div>
+  );
+}
+
+/* ============================================================
+   TELA: Garçom — comandas ativas, entrega, contas e gestão
+   ============================================================ */
+function WaiterScreen({ orders, updateOrder, deleteOrder, onBack, now, pushToast }) {
+  const [filter, setFilter] = useState("ativos");
+  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [billView, setBillView] = useState(null);
+
+  const ativos = orders.filter(o => o.status !== STATUS.FECHADO);
+  const pedindoConta = orders.filter(o => o.contaPedida && o.status !== STATUS.FECHADO);
+  const fechados = orders.filter(o => o.status === STATUS.FECHADO);
+
+  const list = filter === "ativos" ? ativos : filter === "contas" ? pedindoConta : fechados;
+
+  const setStatus = async (order, status) => {
+    try { await updateOrder(order.docId, { status, atualizadoEm: Date.now() }); }
+    catch (e) { pushToast("Erro ao atualizar pedido.", "error"); }
+  };
+
+  const closeBill = async (nome) => {
+    const ordersOfClient = orders.filter(o => o.nome === nome && o.status !== STATUS.FECHADO);
+    try {
+      await Promise.all(ordersOfClient.map(o => updateOrder(o.docId, { status: STATUS.FECHADO, contaPedida: false, atualizadoEm: Date.now() })));
+      pushToast("Conta de " + nome + " encerrada.", "success");
+      setBillView(null);
+    } catch (e) {
+      pushToast("Erro ao encerrar a conta.", "error");
+    }
+  };
+
+  const removeOrder = async (order) => {
+    try {
+      await deleteOrder(order.docId);
+      pushToast("Pedido removido.", "success");
+      setConfirmDelete(null);
+    } catch (e) {
+      pushToast("Erro ao excluir pedido.", "error");
+    }
+  };
+
+  // agrupar por nome para visão de conta
+  const groupedByName = {};
+  ativos.forEach(o => {
+    if (!groupedByName[o.nome]) groupedByName[o.nome] = [];
+    groupedByName[o.nome].push(o);
+  });
+
+  return (
+    <div className="min-h-screen pb-6" style={{background:"var(--bg)"}}>
+      <header className="px-4 pt-4 pb-3 flex items-center justify-between sticky top-0 z-30" style={{background:"linear-gradient(180deg, var(--bg) 75%, transparent)"}}>
+        <button onClick={onBack} className="text-[var(--cream-dim)] hover:text-[var(--cream)] flex items-center gap-1 text-sm focus-ring rounded">
+          <Icon.ArrowLeft className="w-4 h-4" /> saída
+        </button>
+        <div className="flex items-center gap-2">
+          <Icon.Bell className="w-5 h-5" style={{color:"var(--orange)"}} />
+          <span className="font-display text-lg" style={{color:"var(--cream)"}}>Garçom</span>
+        </div>
+        <div className="w-12"></div>
+      </header>
+
+      <div className="px-4 flex gap-2 mb-4 overflow-x-auto scrollbar-none">
+        {[
+          { key: "ativos", label: "Ativos (" + ativos.length + ")" },
+          { key: "contas", label: "Pedindo conta (" + pedindoConta.length + ")" },
+          { key: "fechados", label: "Fechados" },
+        ].map(f => (
+          <button key={f.key} onClick={() => setFilter(f.key)}
+            className={"tap-active transition-fast px-4 py-2 rounded-full text-sm font-semibold border whitespace-nowrap focus-ring " + (filter===f.key ? "border-transparent" : "border-[#3d2d1d] text-[var(--cream-dim)]")}
+            style={filter===f.key ? { background: f.key==="contas" ? "var(--orange)" : "var(--green)", color:"#0a0a0a" } : {}}>
+            {f.key === "contas" && pedindoConta.length > 0 && <Icon.Alert className="w-3.5 h-3.5 inline mr-1" />}
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      <main className="px-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {list.length === 0 && (
+          <div className="col-span-full flex flex-col items-center text-center py-16 gap-2">
+            <CactusMascot className="w-16 h-16" wobble={false} />
+            <p className="text-[var(--cream-dim)] text-sm">Nada por aqui agora.</p>
+          </div>
+        )}
+        {list.map(order => (
+          <OrderCard key={order.docId} order={order} now={now}>
+            <div className="flex flex-col gap-2">
+              <div className="flex gap-2">
+                {order.status === STATUS.PRONTO && (
+                  <button onClick={() => setStatus(order, STATUS.ENTREGUE)}
+                    className="tap-active transition-fast flex-1 rounded-lg py-2 text-xs font-bold flex items-center justify-center gap-1" style={{background:"var(--green)", color:"#0a0a0a"}}>
+                    <Icon.Check className="w-3.5 h-3.5"/> Entregar
+                  </button>
+                )}
+                {(order.status === STATUS.RECEBIDO || order.status === STATUS.PREPARO) && (
+                  <span className="flex-1 text-xs text-center py-2 text-[var(--cream-dim)]">Aguardando cozinha</span>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => setConfirmDelete(order)} className="tap-active transition-fast flex-1 rounded-lg py-2 text-xs font-semibold flex items-center justify-center gap-1 border border-[#3d2d1d] text-[var(--cream-dim)]">
+                  <Icon.Trash className="w-3.5 h-3.5"/> Excluir
+                </button>
+                <button onClick={() => setBillView(order.nome)} className="tap-active transition-fast flex-1 rounded-lg py-2 text-xs font-semibold flex items-center justify-center gap-1 border border-[#3d2d1d]" style={{color:"var(--orange)"}}>
+                  <Icon.Receipt className="w-3.5 h-3.5"/> Ver conta
+                </button>
+              </div>
+            </div>
+          </OrderCard>
+        ))}
+      </main>
+
+      {/* Modal: confirmar exclusão */}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center bg-black/70 px-4" onClick={() => setConfirmDelete(null)}>
+          <div onClick={e => e.stopPropagation()} className="anim-sheet sm:anim-pop w-full sm:max-w-sm leather-tag rounded-2xl p-5">
+            <h3 className="font-display text-lg mb-1" style={{color:"var(--cream)"}}>Excluir pedido de {confirmDelete.nome}?</h3>
+            <p className="text-sm text-[var(--cream-dim)] mb-4">Essa ação não pode ser desfeita.</p>
+            <div className="flex gap-2">
+              <button onClick={() => setConfirmDelete(null)} className="tap-active transition-fast flex-1 rounded-xl py-2.5 font-semibold border border-[#3d2d1d] text-[var(--cream-dim)]">Cancelar</button>
+              <button onClick={() => removeOrder(confirmDelete)} className="tap-active transition-fast flex-1 rounded-xl py-2.5 font-semibold" style={{background:"var(--red)", color:"#fff"}}>Excluir</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: ver/fechar conta de um cliente */}
+      {billView && (
+        <BillModal
+          nome={billView}
+          orders={orders.filter(o => o.nome === billView && o.status !== STATUS.FECHADO)}
+          onClose={() => setBillView(null)}
+          onCloseBill={() => closeBill(billView)}
+        />
+      )}
+    </div>
+  );
+}
+
+function BillModal({ nome, orders, onClose, onCloseBill }) {
+  const total = orders.reduce((sum, o) => sum + o.itens.reduce((s,i)=>s+i.qtd*i.preco,0), 0);
+  return (
+    <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center bg-black/70 px-4" onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} className="anim-sheet sm:anim-pop w-full sm:max-w-sm leather-tag rounded-2xl p-5 max-h-[80vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="font-display text-xl" style={{color:"var(--cream)"}}>Conta — {nome}</h3>
+          <button onClick={onClose} className="text-[var(--cream-dim)] focus-ring rounded"><Icon.X className="w-5 h-5"/></button>
+        </div>
+        <div className="flex flex-col gap-3 mb-4">
+          {orders.map(order => (
+            <div key={order.docId} className="border-b border-[#3d2d1d] pb-2">
+              <div className="text-[11px] text-[var(--cream-dim)] mb-1">{formatClock(order.criadoEm)}</div>
+              {order.itens.map((it, idx) => (
+                <div key={idx} className="flex justify-between text-sm" style={{color:"var(--cream)"}}>
+                  <span>{it.qtd}x {it.nome}</span>
+                  <span className="text-[var(--cream-dim)]">{fmtMoney(it.qtd*it.preco)}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+        <div className="flex justify-between items-center mb-4">
+          <span className="font-display text-lg" style={{color:"var(--cream)"}}>Total</span>
+          <span className="font-display text-2xl" style={{color:"var(--green)"}}>{fmtMoney(total)}</span>
+        </div>
+        <p className="text-xs text-[var(--cream-dim)] mb-3">Passe esse valor na máquina e depois encerre a conta.</p>
+        <button onClick={onCloseBill} className="tap-active transition-fast w-full rounded-xl py-3 font-display" style={{background:"var(--green)", color:"#0a0a0a"}}>
+          Encerrar conta
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   APP RAIZ — roteamento entre telas
+   ============================================================ */
+function App() {
+  const [screen, setScreen] = useState("role"); // role | gate-garcom | gate-cozinha | name | menu | cart | tab | garcom | cozinha
+  const [nome, setNome] = useState(() => sessionStorage.getItem("trilhas_nome") || "");
+  const [cart, setCart] = useState([]);
+  const [sending, setSending] = useState(false);
+  const [requestingBill, setRequestingBill] = useState(false);
+  const [now, setNow] = useState(Date.now());
+
+  const { orders, connected, error, addOrder, updateOrder, deleteOrder } = useOrders();
+  const { toasts, push, dismiss } = useToasts();
+
+  // clock para os cronômetros dos kanbans
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 15000);
+    return () => clearInterval(t);
+  }, []);
+
+  // avisa garçom/cozinha sobre erros de permissão do Firestore
+  useEffect(() => {
+    if (error && (screen === "cozinha" || screen === "garcom")) {
+      push("Erro de conexão (" + error + "). Verifique as regras do Firestore.", "error");
+    }
+  }, [error, screen]);
+
+  // beep quando um novo pedido chega (apenas em telas de cozinha/garçom)
+  const knownIds = useRef(new Set());
+  useEffect(() => {
+    if (screen !== "cozinha" && screen !== "garcom") { knownIds.current = new Set(orders.map(o=>o.docId)); return; }
+    const currentIds = new Set(orders.map(o => o.docId));
+    let isNew = false;
+    currentIds.forEach(id => { if (!knownIds.current.has(id)) isNew = true; });
+    if (knownIds.current.size > 0 && isNew) {
+      playBeep(2);
+      push("Novo pedido recebido!", "info");
+    }
+    knownIds.current = currentIds;
+  }, [orders, screen]);
+
+  const myOrders = useMemo(() => orders.filter(o => o.nome === nome), [orders, nome]);
+
+  const handleConfirmOrder = async () => {
+    if (cart.length === 0) return;
+    setSending(true);
+    const order = {
+      id: uid(),
+      nome,
+      itens: cart.map(c => ({ id: c.id, nome: c.nome, preco: c.preco, qtd: c.qtd })),
+      status: STATUS.RECEBIDO,
+      contaPedida: false,
+      criadoEm: Date.now(),
+      atualizadoEm: Date.now(),
+    };
+    try {
+      await addOrder(order);
+      setCart([]);
+      push("Pedido enviado para a cozinha!", "success");
+      setScreen("tab");
+    } catch (e) {
+      console.error(e);
+      push("Não foi possível enviar o pedido (" + (e.code || e.message || "erro") + "). Avise o garçom.", "error");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleRequestBill = async () => {
+    setRequestingBill(true);
+    try {
+      await Promise.all(myOrders.filter(o => o.status !== STATUS.FECHADO).map(o => updateOrder(o.docId, { contaPedida: true })));
+      push("Conta solicitada! O garçom já vai te atender.", "success");
+    } catch (e) {
+      push("Não consegui chamar o garçom agora.", "error");
+    } finally {
+      setRequestingBill(false);
+    }
+  };
+
+  const goRole = (role) => {
+    if (role === 'cliente') setScreen('name');
+    else if (role === 'garcom') setScreen('gate-garcom');
+    else if (role === 'cozinha') setScreen('gate-cozinha');
+  };
+
+  const submitName = (n) => {
+    setNome(n);
+    sessionStorage.setItem("trilhas_nome", n);
+    setScreen('menu');
+  };
+
+  return (
+    <>
+      <ToastStack toasts={toasts} dismiss={dismiss} />
+
+      {!connected && !error && (screen === 'cozinha' || screen === 'garcom' || screen === 'tab' || screen === 'cart') && (
+        <div className="fixed bottom-2 left-1/2 -translate-x-1/2 z-[100] text-[10px] text-neutral-500 bg-black/60 px-3 py-1 rounded-full">
+          conectando...
+        </div>
+      )}
+
+      {screen === "role" && <RoleSelect onSelect={goRole} />}
+
+      {screen === "gate-garcom" && (
+        <PasswordGate role="garcom" onBack={() => setScreen("role")} onSuccess={() => setScreen("garcom")} />
+      )}
+      {screen === "gate-cozinha" && (
+        <PasswordGate role="cozinha" onBack={() => setScreen("role")} onSuccess={() => setScreen("cozinha")} />
+      )}
+
+      {screen === "name" && (
+        <NameGate onBack={() => setScreen("role")} onSubmit={submitName} />
+      )}
+
+      {screen === "menu" && (
+        <MenuScreen
+          nome={nome}
+          cart={cart}
+          setCart={setCart}
+          onBack={() => setScreen("role")}
+          onGoCart={() => setScreen("cart")}
+          onGoTab={() => setScreen("tab")}
+        />
+      )}
+
+      {screen === "cart" && (
+        <CartScreen
+          nome={nome}
+          cart={cart}
+          setCart={setCart}
+          onBack={() => setScreen("menu")}
+          onConfirm={handleConfirmOrder}
+          sending={sending}
+        />
+      )}
+
+      {screen === "tab" && (
+        <TabScreen
+          nome={nome}
+          myOrders={myOrders}
+          onBack={() => setScreen("menu")}
+          onAddMore={() => setScreen("menu")}
+          onRequestBill={handleRequestBill}
+          requestingBill={requestingBill}
+        />
+      )}
+
+      {screen === "cozinha" && (
+        <KitchenScreen orders={orders} updateOrder={updateOrder} onBack={() => setScreen("role")} now={now} pushToast={push} />
+      )}
+
+      {screen === "garcom" && (
+        <WaiterScreen orders={orders} updateOrder={updateOrder} deleteOrder={deleteOrder} onBack={() => setScreen("role")} now={now} pushToast={push} />
+      )}
+    </>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
+</script>
+
+</body>
+</html>
