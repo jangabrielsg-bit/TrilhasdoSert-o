@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Trilhas do Sertão Burger — Cozinha</title>
+<meta name="theme-color" content="#0a0a0a" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rye&family=Rubik:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,500&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<style>
+  :root{
+    --bg: #0a0a0a;
+    --bg-soft: #141210;
+    --panel: #1a1714;
+    --leather: #2a1f16;
+    --green: #4ADE80;
+    --green-dim: #2e7d52;
+    --orange: #FFA726;
+    --orange-deep: #E65100;
+    --red: #D32F2F;
+    --cream: #F5F1E8;
+    --cream-dim: #c9c2b3;
+  }
+  html,body{ background:var(--bg); margin:0; }
+  #root{ min-height:100vh; }
+
+  .font-display{ font-family:'Rye', serif; }
+  .font-body{ font-family:'Rubik', sans-serif; }
+
+  .brand-burn{
+    text-shadow: 0 0 1px rgba(0,0,0,0.6), 0 2px 0 rgba(0,0,0,0.5), 0 0 18px currentColor;
+    letter-spacing: 0.02em;
+  }
+
+  .leather-tag{
+    background: linear-gradient(160deg, #2a1f16 0%, #1f1610 100%);
+    border: 1px solid #3d2d1d;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 14px rgba(0,0,0,0.5);
+    position:relative;
+  }
+  .leather-tag::before{
+    content:'';
+    position:absolute; top:10px; left:10px;
+    width:6px; height:6px; border-radius:50%;
+    background:#3d2d1d;
+    box-shadow: inset 0 1px 1px rgba(0,0,0,0.6), 0 0 0 2px #161310;
+  }
+
+  .grain-overlay{
+    position:fixed; inset:0; pointer-events:none; z-index:0; opacity:0.05; mix-blend-mode:overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  @keyframes stampIn{
+    0%{ transform: scale(2.2) rotate(-8deg); opacity:0; }
+    60%{ transform: scale(0.92) rotate(2deg); opacity:1; }
+    100%{ transform: scale(1) rotate(0deg); opacity:1; }
+  }
+  .anim-stamp{ animation: stampIn 0.45s cubic-bezier(.2,1.4,.4,1) both; }
+
+  @keyframes riseIn{
+    0%{ opacity:0; transform: translateY(14px); }
+    100%{ opacity:1; transform: translateY(0); }
+  }
+  .anim-rise{ animation: riseIn 0.32s ease-out both; }
+
+  @keyframes popIn{
+    0%{ opacity:0; transform: scale(0.85); }
+    100%{ opacity:1; transform: scale(1); }
+  }
+  .anim-pop{ animation: popIn 0.22s cubic-bezier(.3,1.6,.5,1) both; }
+
+  @keyframes wobbleCactus{
+    0%,100%{ transform: rotate(-2deg); }
+    50%{ transform: rotate(2deg); }
+  }
+  .wobble{ animation: wobbleCactus 3.2s ease-in-out infinite; }
+
+  @keyframes slideUpSheet{
+    0%{ transform: translateY(100%); }
+    100%{ transform: translateY(0); }
+  }
+  .anim-sheet{ animation: slideUpSheet 0.28s cubic-bezier(.2,.9,.3,1) both; }
+
+  ::-webkit-scrollbar{ height:8px; width:8px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  ::-webkit-scrollbar-thumb{ background:#3d2d1d; border-radius:8px; }
+  .scrollbar-none::-webkit-scrollbar{ display:none; }
+  .scrollbar-none{ -ms-overflow-style:none; scrollbar-width:none; }
+
+  .tap-active:active{ transform: scale(0.96); }
+  *{ -webkit-tap-highlight-color: transparent; }
+
+  .focus-ring:focus-visible{ outline: 2px solid var(--green); outline-offset: 2px; }
+
+  .transition-fast{ transition: all 0.15s cubic-bezier(.3,.7,.4,1); }
+  .transition-med{ transition: all 0.25s cubic-bezier(.3,.7,.4,1); }
+
+  @media (prefers-reduced-motion: reduce){
+    .anim-stamp, .anim-rise, .anim-pop, .wobble, .anim-sheet{ animation: none !important; }
+  }
+</style>
+</head>
+<body class="font-body">
+<div id="root">
+  <div id="fallback-loading" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0a0a0a;color:#c9c2b3;font-family:sans-serif;text-align:center;padding:24px;gap:8px;">
+    <div style="font-size:14px;">Carregando o cardápio...</div>
+    <div style="font-size:12px;opacity:0.6;">Se isso não sair daqui em alguns segundos, recarregue a página ou verifique sua conexão.</div>
+  </div>
+</div>
+<div class="grain-overlay"></div>
+
+<script>
+  setTimeout(function() {
+    var fallback = document.getElementById('fallback-loading');
+    if (fallback && document.body.contains(fallback)) {
+      fallback.innerHTML =
+        '<div style="font-size:16px;color:#ff8a8a;">Não consegui carregar o app.</div>' +
+        '<div style="font-size:13px;opacity:0.85;max-width:340px;">Isso geralmente acontece quando algum escudo/bloqueador do navegador impede o carregamento de scripts. Tente:</div>' +
+        '<div style="font-size:13px;opacity:0.85;max-width:340px;text-align:left;">' +
+          '1. Desative o Brave Shield (ícone laranja na barra de endereço) ou o AdBlock/uBlock para este site<br>' +
+          '2. Recarregue a página<br>' +
+          '3. Se persistir, tente em outro navegador ou aba anônima' +
+        '</div>' +
+        '<button onclick="window.location.reload()" style="margin-top:8px;padding:10px 20px;background:#4ADE80;color:#0a0a0a;border:none;border-radius:10px;font-weight:bold;cursor:pointer;">Recarregar</button>';
+    }
+  }, 6000);
+</script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, useRef, useCallback } = React;
+
+/* ============================================================
+   FIREBASE CONFIG — mesmo projeto usado pelos 4 apps
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyASBRpDyxqPhzwgXL7fOBN3Gte1pOF89Dw",
+  authDomain: "trilhasdosertao-e0c36.firebaseapp.com",
+  projectId: "trilhasdosertao-e0c36",
+  storageBucket: "trilhasdosertao-e0c36.firebasestorage.app",
+  messagingSenderId: "1053469673184",
+  appId: "1:1053469673184:web:04a8964e48863df322b285"
+};
+
+let app, db;
+try {
+  app = firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+  try { db.enablePersistence({ synchronizeTabs: true }); } catch(e) {}
+} catch (e) {
+  console.error("Erro ao iniciar Firebase:", e);
+}
+
+const MENU_COL = "cardapio";
+const ORDERS_COL = "pedidos";
+const CLIENTES_COL = "clientes";
+const AVALIACOES_COL = "avaliacoes";
+
+const CATEGORY_ORDER = ["Tradicionais","Especiais","Dog Prensado","Árabes","Acompanhamentos","Adicionais","Bebidas"];
+const CUSTOMIZABLE_CATEGORIES = new Set(["Tradicionais", "Especiais", "Dog Prensado", "Árabes"]);
+
+const STATUS = {
+  RECEBIDO: "recebido",
+  PREPARO: "preparo",
+  PRONTO: "pronto",
+  ENTREGUE: "entregue",
+  FECHADO: "fechado",
+};
+
+const STATUS_LABEL = {
+  [STATUS.RECEBIDO]: "Recebido",
+  [STATUS.PREPARO]: "Na brasa",
+  [STATUS.PRONTO]: "Pronto",
+  [STATUS.ENTREGUE]: "Entregue",
+  [STATUS.FECHADO]: "Fechado",
+};
+
+function uid(){
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+}
+
+function formatClock(ts){
+  const d = new Date(ts);
+  return d.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+}
+
+/* ============================================================
+   MASCOTE e logo (versão compacta — só usados na marca do header)
+   ============================================================ */
+function LogoMark({ size = "text-3xl" }) {
+  return (
+    <div className="flex flex-col items-center select-none">
+      <div className={"font-display brand-burn " + size} style={{color:"var(--green)"}}>Trilhas do Sertão</div>
+      <div className="font-display text-sm -mt-1" style={{color:"var(--orange)"}}>★ Burger ★</div>
+    </div>
+  );
+}
+
+const Icon = {
+  Clock: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>),
+  Alert: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/></svg>),
+  Receipt: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M4 2h16v20l-3-2-3 2-3-2-3 2-3-2-1 2V2Z"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>),
+  Flame: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M8.5 14.5A2.5 2.5 0 0 0 11 17a2.5 2.5 0 0 0 2.5-2.5c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7.5 7.5 0 1 1-15 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5"/></svg>),
+};
+
+/* ============================================================
+   HOOK: useOrders — somente leitura, pedidos ativos em tempo real
+   ============================================================ */
+function useOrders() {
+  const [orders, setOrders] = useState([]);
+  const [connected, setConnected] = useState(false);
+
+  useEffect(() => {
+    if (!db) return;
+    const unsub = db.collection(ORDERS_COL)
+      .orderBy("criadoEm", "desc")
+      .onSnapshot(
+        (snap) => {
+          setConnected(true);
+          const list = [];
+          snap.forEach(doc => list.push({ docId: doc.id, ...doc.data() }));
+          setOrders(list);
+        },
+        (err) => { console.error("Firestore erro:", err); setConnected(false); }
+      );
+    return () => unsub();
+  }, []);
+
+  return { orders, connected };
+}
+
+/* ============================================================
+   COMPONENTE: Card de pedido em formato grande para tela de TV
+   ============================================================ */
+function OrderCard({ order, now, lateMinutes = 12 }) {
+  const mins = Math.floor((now - order.criadoEm) / 60000);
+  const late = order.status !== STATUS.PRONTO && order.status !== STATUS.ENTREGUE && order.status !== STATUS.FECHADO && mins >= lateMinutes;
+
+  return (
+    <div className={"leather-tag rounded-2xl p-5 anim-rise " + (late ? "pulse-late border-red-700" : "")}>
+      <div className="flex justify-between items-start mb-2">
+        <div>
+          <div className="font-display text-2xl" style={{color:"var(--cream)"}}>{order.nome} <span className="text-[var(--cream-dim)]" style={{fontSize:"0.65em"}}>#{order.codigo}</span></div>
+          <div className="text-sm text-[var(--cream-dim)]">{formatClock(order.criadoEm)}</div>
+        </div>
+        <div className={"flex items-center gap-1 font-bold rounded-full text-base px-3 py-1.5 " + (late ? "bg-red-900 text-red-200" : "bg-[#2a1f16] text-[var(--cream-dim)]")}>
+          <Icon.Clock className="w-4 h-4" />
+          {mins} min
+        </div>
+      </div>
+      <div className="flex flex-col gap-2 mb-3">
+        {order.itens.map((it, idx) => (
+          <div key={idx} className="text-lg" style={{color:"var(--cream)"}}>
+            <div>{it.qtd}x {it.nome}</div>
+            {(it.adicionais && it.adicionais.length > 0) && (
+              <div className="flex flex-wrap gap-1 mt-1">
+                {it.adicionais.map(a => (
+                  <span key={a.id} className="text-sm font-semibold px-1.5 py-0.5 rounded-full" style={{background:"rgba(74,222,128,0.15)", color:"var(--green)"}}>+ {a.nome}</span>
+                ))}
+              </div>
+            )}
+            {it.obs && (
+              <div className="text-base font-bold mt-1 px-2 py-1 rounded-lg flex items-start gap-1.5" style={{background:"rgba(211,47,47,0.18)", color:"#ff8a8a"}}>
+                <Icon.Alert className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                <span>{it.obs}</span>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+      {order.contaPedida && order.status !== STATUS.FECHADO && (
+        <div className="text-sm flex items-center gap-1.5 font-bold mb-2 px-2 py-1 rounded-lg w-fit" style={{background:"rgba(255,167,38,0.15)", color:"var(--orange)"}}>
+          <Icon.Receipt className="w-4 h-4" /> Conta pedida
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   TELA: Cozinha — painel de TV, somente leitura, sem botões
+   ============================================================ */
+function KitchenScreen({ orders, now }) {
+  const cols = [
+    { key: STATUS.RECEBIDO, label: "Recebido", accent: "var(--orange)" },
+    { key: STATUS.PREPARO, label: "Na brasa", accent: "var(--red)" },
+    { key: STATUS.PRONTO, label: "Pronto", accent: "var(--green)" },
+  ];
+
+  const visible = orders.filter(o => o.status !== STATUS.ENTREGUE && o.status !== STATUS.FECHADO);
+
+  return (
+    <div className="min-h-screen" style={{background:"var(--bg)"}}>
+      <header className="px-6 pt-6 pb-4 flex items-center justify-between sticky top-0 z-30" style={{background:"linear-gradient(180deg, var(--bg) 75%, transparent)"}}>
+        <div className="flex items-center gap-3">
+          <Icon.Flame className="w-7 h-7" style={{color:"var(--red)"}} />
+          <LogoMark size="text-2xl" />
+        </div>
+        <span className="text-base text-[var(--cream-dim)]">{visible.length} pedidos ativos</span>
+      </header>
+
+      <main className="px-4 grid grid-cols-1 md:grid-cols-3 gap-5 pb-8">
+        {cols.map(col => {
+          const items = visible.filter(o => o.status === col.key).sort((a,b)=>a.criadoEm-b.criadoEm);
+          return (
+            <div key={col.key} className="flex flex-col gap-3">
+              <div className="flex items-center gap-2.5 px-2 sticky top-[88px] z-20 py-2" style={{background:"var(--bg)"}}>
+                <span className="w-3.5 h-3.5 rounded-full" style={{background:col.accent}}></span>
+                <h2 className="font-display text-2xl" style={{color:col.accent}}>{col.label}</h2>
+                <span className="text-base text-[var(--cream-dim)]">({items.length})</span>
+              </div>
+              <div className="flex flex-col gap-3 px-1 min-h-[100px]">
+                {items.length === 0 && (
+                  <p className="text-sm text-neutral-600 text-center py-8">Nenhum pedido aqui</p>
+                )}
+                {items.map(order => (
+                  <OrderCard key={order.docId} order={order} now={now} />
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </main>
+    </div>
+  );
+}
+
+/* ============================================================
+   APP RAIZ
+   ============================================================ */
+function App() {
+  const [now, setNow] = useState(Date.now());
+  const { orders, connected } = useOrders();
+
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 15000);
+    return () => clearInterval(t);
+  }, []);
+
+  return (
+    <>
+      {!connected && (
+        <div className="fixed bottom-2 left-1/2 -translate-x-1/2 z-[100] text-[10px] text-neutral-500 bg-black/60 px-3 py-1 rounded-full">
+          conectando...
+        </div>
+      )}
+      <KitchenScreen orders={orders} now={now} />
+    </>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
+</script>
+
+</body>
+</html>

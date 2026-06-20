@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Trilhas do Sertão Burger — Gerencial</title>
+<meta name="theme-color" content="#0a0a0a" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rye&family=Rubik:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,500&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<style>
+  :root{
+    --bg: #0a0a0a;
+    --bg-soft: #141210;
+    --panel: #1a1714;
+    --leather: #2a1f16;
+    --green: #4ADE80;
+    --green-dim: #2e7d52;
+    --orange: #FFA726;
+    --orange-deep: #E65100;
+    --red: #D32F2F;
+    --cream: #F5F1E8;
+    --cream-dim: #c9c2b3;
+  }
+  html,body{ background:var(--bg); margin:0; }
+  #root{ min-height:100vh; }
+
+  .font-display{ font-family:'Rye', serif; }
+  .font-body{ font-family:'Rubik', sans-serif; }
+
+  .brand-burn{
+    text-shadow: 0 0 1px rgba(0,0,0,0.6), 0 2px 0 rgba(0,0,0,0.5), 0 0 18px currentColor;
+    letter-spacing: 0.02em;
+  }
+
+  .leather-tag{
+    background: linear-gradient(160deg, #2a1f16 0%, #1f1610 100%);
+    border: 1px solid #3d2d1d;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 14px rgba(0,0,0,0.5);
+    position:relative;
+  }
+  .leather-tag::before{
+    content:'';
+    position:absolute; top:10px; left:10px;
+    width:6px; height:6px; border-radius:50%;
+    background:#3d2d1d;
+    box-shadow: inset 0 1px 1px rgba(0,0,0,0.6), 0 0 0 2px #161310;
+  }
+
+  .grain-overlay{
+    position:fixed; inset:0; pointer-events:none; z-index:0; opacity:0.05; mix-blend-mode:overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  @keyframes stampIn{
+    0%{ transform: scale(2.2) rotate(-8deg); opacity:0; }
+    60%{ transform: scale(0.92) rotate(2deg); opacity:1; }
+    100%{ transform: scale(1) rotate(0deg); opacity:1; }
+  }
+  .anim-stamp{ animation: stampIn 0.45s cubic-bezier(.2,1.4,.4,1) both; }
+
+  @keyframes riseIn{
+    0%{ opacity:0; transform: translateY(14px); }
+    100%{ opacity:1; transform: translateY(0); }
+  }
+  .anim-rise{ animation: riseIn 0.32s ease-out both; }
+
+  @keyframes popIn{
+    0%{ opacity:0; transform: scale(0.85); }
+    100%{ opacity:1; transform: scale(1); }
+  }
+  .anim-pop{ animation: popIn 0.22s cubic-bezier(.3,1.6,.5,1) both; }
+
+  @keyframes wobbleCactus{
+    0%,100%{ transform: rotate(-2deg); }
+    50%{ transform: rotate(2deg); }
+  }
+  .wobble{ animation: wobbleCactus 3.2s ease-in-out infinite; }
+
+  @keyframes slideUpSheet{
+    0%{ transform: translateY(100%); }
+    100%{ transform: translateY(0); }
+  }
+  .anim-sheet{ animation: slideUpSheet 0.28s cubic-bezier(.2,.9,.3,1) both; }
+
+  ::-webkit-scrollbar{ height:8px; width:8px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  ::-webkit-scrollbar-thumb{ background:#3d2d1d; border-radius:8px; }
+  .scrollbar-none::-webkit-scrollbar{ display:none; }
+  .scrollbar-none{ -ms-overflow-style:none; scrollbar-width:none; }
+
+  .tap-active:active{ transform: scale(0.96); }
+  *{ -webkit-tap-highlight-color: transparent; }
+
+  .focus-ring:focus-visible{ outline: 2px solid var(--green); outline-offset: 2px; }
+
+  .transition-fast{ transition: all 0.15s cubic-bezier(.3,.7,.4,1); }
+  .transition-med{ transition: all 0.25s cubic-bezier(.3,.7,.4,1); }
+
+  @media (prefers-reduced-motion: reduce){
+    .anim-stamp, .anim-rise, .anim-pop, .wobble, .anim-sheet{ animation: none !important; }
+  }
+</style>
+</head>
+<body class="font-body">
+<div id="root">
+  <div id="fallback-loading" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0a0a0a;color:#c9c2b3;font-family:sans-serif;text-align:center;padding:24px;gap:8px;">
+    <div style="font-size:14px;">Carregando o cardápio...</div>
+    <div style="font-size:12px;opacity:0.6;">Se isso não sair daqui em alguns segundos, recarregue a página ou verifique sua conexão.</div>
+  </div>
+</div>
+<div class="grain-overlay"></div>
+
+<script>
+  setTimeout(function() {
+    var fallback = document.getElementById('fallback-loading');
+    if (fallback && document.body.contains(fallback)) {
+      fallback.innerHTML =
+        '<div style="font-size:16px;color:#ff8a8a;">Não consegui carregar o app.</div>' +
+        '<div style="font-size:13px;opacity:0.85;max-width:340px;">Isso geralmente acontece quando algum escudo/bloqueador do navegador impede o carregamento de scripts. Tente:</div>' +
+        '<div style="font-size:13px;opacity:0.85;max-width:340px;text-align:left;">' +
+          '1. Desative o Brave Shield (ícone laranja na barra de endereço) ou o AdBlock/uBlock para este site<br>' +
+          '2. Recarregue a página<br>' +
+          '3. Se persistir, tente em outro navegador ou aba anônima' +
+        '</div>' +
+        '<button onclick="window.location.reload()" style="margin-top:8px;padding:10px 20px;background:#4ADE80;color:#0a0a0a;border:none;border-radius:10px;font-weight:bold;cursor:pointer;">Recarregar</button>';
+    }
+  }, 6000);
+</script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, useRef, useCallback } = React;
+
+/* ============================================================
+   FIREBASE CONFIG — mesmo projeto usado pelos 4 apps
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyASBRpDyxqPhzwgXL7fOBN3Gte1pOF89Dw",
+  authDomain: "trilhasdosertao-e0c36.firebaseapp.com",
+  projectId: "trilhasdosertao-e0c36",
+  storageBucket: "trilhasdosertao-e0c36.firebasestorage.app",
+  messagingSenderId: "1053469673184",
+  appId: "1:1053469673184:web:04a8964e48863df322b285"
+};
+
+let app, db;
+try {
+  app = firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+  try { db.enablePersistence({ synchronizeTabs: true }); } catch(e) {}
+} catch (e) {
+  console.error("Erro ao iniciar Firebase:", e);
+}
+
+const MENU_COL = "cardapio";
+const ORDERS_COL = "pedidos";
+const CLIENTES_COL = "clientes";
+const AVALIACOES_COL = "avaliacoes";
+const HISTORY_COL = "historico_vendas";
+const SENHA_GERENCIAL = "sertao2026gestao";
+
+const CATEGORY_ORDER = ["Tradicionais","Especiais","Dog Prensado","Árabes","Acompanhamentos","Adicionais","Bebidas"];
+const CUSTOMIZABLE_CATEGORIES = new Set(["Tradicionais", "Especiais", "Dog Prensado", "Árabes"]);
+
+const STATUS = {
+  RECEBIDO: "recebido",
+  PREPARO: "preparo",
+  PRONTO: "pronto",
+  ENTREGUE: "entregue",
+  FECHADO: "fechado",
+};
+
+const STATUS_LABEL = {
+  [STATUS.RECEBIDO]: "Recebido",
+  [STATUS.PREPARO]: "Na brasa",
+  [STATUS.PRONTO]: "Pronto",
+  [STATUS.ENTREGUE]: "Entregue",
+  [STATUS.FECHADO]: "Fechado",
+};
+
+function uid(){
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+}
+
+function fmtMoney(v) { return "R$ " + v.toFixed(2).replace(".", ","); }
+
+function formatClock(ts){
+  const d = new Date(ts);
+  return d.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+}
+
+function formatDate(ts) {
+  const d = new Date(ts);
+  return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' });
+}
+
+function daysSince(ts) {
+  return Math.floor((Date.now() - ts) / 86400000);
+}
+
+function cartItemTotal(entry) {
+  const addicionaisTotal = (entry.adicionais || []).reduce((s, a) => s + a.preco, 0);
+  return (entry.preco + addicionaisTotal) * entry.qtd;
+}
+
+/* ============================================================
+   MASCOTE e ícones
+   ============================================================ */
+function CactusMascot({ className = "w-24 h-24", wobble = true }) {
+  return (
+    <svg viewBox="0 0 200 220" className={(wobble ? "wobble " : "") + className} xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="100" cy="208" rx="46" ry="8" fill="#000" opacity="0.35" />
+      <path d="M100 60 C 70 60, 55 85, 58 115 C 60 145, 70 175, 75 195 L 125 195 C 130 175, 140 145, 142 115 C 145 85, 130 60, 100 60 Z" fill="#3FA34D" stroke="#2C7A39" strokeWidth="3"/>
+      <path d="M58 120 C 35 118, 25 100, 32 85 C 38 95, 48 102, 60 105 Z" fill="#3FA34D" stroke="#2C7A39" strokeWidth="3"/>
+      <path d="M142 120 C 165 110, 172 88, 162 72 C 158 85, 150 96, 140 102 Z" fill="#3FA34D" stroke="#2C7A39" strokeWidth="3"/>
+      <ellipse cx="100" cy="58" rx="48" ry="11" fill="#7a4a23" stroke="#522f15" strokeWidth="3"/>
+      <path d="M75 58 C 75 35, 85 25, 100 25 C 115 25, 125 35, 125 58 Z" fill="#8a5a2c" stroke="#522f15" strokeWidth="3"/>
+      <rect x="80" y="50" width="40" height="7" rx="3" fill="#522f15"/>
+      <circle cx="86" cy="92" r="5.5" fill="#1a1a1a"/>
+      <circle cx="114" cy="92" r="5.5" fill="#1a1a1a"/>
+      <circle cx="88" cy="90" r="1.6" fill="#fff"/>
+      <circle cx="116" cy="90" r="1.6" fill="#fff"/>
+      <path d="M82 104 C 90 110, 96 110, 100 106 C 104 110, 110 110, 118 104 C 114 116, 104 118, 100 114 C 96 118, 86 116, 82 104 Z" fill="#5a3a1a"/>
+      <path d="M62 128 C 80 138, 120 138, 138 128 L 134 140 C 115 148, 85 148, 66 140 Z" fill="#D32F2F" stroke="#a02323" strokeWidth="2"/>
+    </svg>
+  );
+}
+
+function LogoMark({ size = "text-3xl" }) {
+  return (
+    <div className="flex flex-col items-center select-none">
+      <div className={"font-display brand-burn " + size} style={{color:"var(--green)"}}>Trilhas do Sertão</div>
+      <div className="font-display text-sm -mt-1" style={{color:"var(--orange)"}}>★ Burger ★</div>
+    </div>
+  );
+}
+
+const Icon = {
+  Plus: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" {...p}><path d="M12 5v14M5 12h14"/></svg>),
+  Minus: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" {...p}><path d="M5 12h14"/></svg>),
+  Check: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M20 6 9 17l-5-5"/></svg>),
+  Alert: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/></svg>),
+  Trash: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>),
+  Edit: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>),
+  Lock: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>),
+  X: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M18 6 6 18M6 6l12 12"/></svg>),
+  Star: (p)=>(<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" {...p}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>),
+  Heart: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z"/></svg>),
+  TrendUp: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>),
+  TrendDown: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>),
+  Receipt: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M4 2h16v20l-3-2-3 2-3-2-3 2-3-2-1 2V2Z"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>),
+  Users: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>),
+  Menu: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>),
+  ChartBar: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>),
+  EyeOff: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>),
+};
+
+/* ============================================================
+   HOOK: useToasts
+   ============================================================ */
+function useToasts() {
+  const [toasts, setToasts] = useState([]);
+  const push = useCallback((msg, type = "info") => {
+    const id = uid();
+    setToasts(t => [...t, { id, msg, type }]);
+    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 4200);
+  }, []);
+  const dismiss = useCallback((id) => setToasts(t => t.filter(x => x.id !== id)), []);
+  return { toasts, push, dismiss };
+}
+
+function ToastStack({ toasts, dismiss }) {
+  return (
+    <div className="fixed top-4 right-4 left-4 sm:left-auto z-[200] flex flex-col gap-2 items-end pointer-events-none">
+      {toasts.map(t => (
+        <div key={t.id} onClick={() => dismiss(t.id)}
+          className={
+            "pointer-events-auto anim-pop max-w-sm w-full sm:w-80 rounded-xl px-4 py-3 shadow-2xl border font-body text-sm cursor-pointer " +
+            (t.type === "error" ? "bg-red-950 border-red-600 text-red-100" :
+             t.type === "success" ? "bg-emerald-950 border-emerald-600 text-emerald-100" :
+             "bg-neutral-900 border-neutral-700 text-neutral-100")
+          }>
+          <div className="flex items-start gap-2">
+            {t.type === "error" && <Icon.Alert className="w-5 h-5 mt-0.5 flex-shrink-0" />}
+            {t.type === "success" && <Icon.Check className="w-5 h-5 mt-0.5 flex-shrink-0" />}
+            <span>{t.msg}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ============================================================
+   HOOK: useVendas — histórico de vendas filtrado por período
+   ============================================================ */
+function useVendas(periodDays) {
+  const [vendas, setVendas] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    if (!db) return;
+    setLoading(true);
+    try {
+      const since = Date.now() - periodDays * 86400000;
+      const snap = await db.collection(HISTORY_COL)
+        .where("fechadoEm", ">=", since)
+        .orderBy("fechadoEm", "desc")
+        .get();
+      const list = [];
+      snap.forEach(doc => list.push({ docId: doc.id, ...doc.data() }));
+      setVendas(list);
+    } catch (e) {
+      console.error("Erro ao buscar vendas:", e);
+    } finally {
+      setLoading(false);
+    }
+  }, [periodDays]);
+
+  useEffect(() => { load(); }, [load]);
+
+  return { vendas, loading, reload: load };
+}
+
+/* ============================================================
+   HOOK: useAvaliacoes — NPS/CSAT
+   ============================================================ */
+function useAvaliacoes(periodDays) {
+  const [avaliacoes, setAvaliacoes] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!db) return;
+    setLoading(true);
+    const since = Date.now() - periodDays * 86400000;
+    db.collection(AVALIACOES_COL).where("criadoEm", ">=", since).orderBy("criadoEm", "desc").get()
+      .then(snap => {
+        const list = [];
+        snap.forEach(doc => list.push({ docId: doc.id, ...doc.data() }));
+        setAvaliacoes(list);
+      })
+      .catch(e => console.error("Erro ao buscar avaliações:", e))
+      .finally(() => setLoading(false));
+  }, [periodDays]);
+
+  return { avaliacoes, loading };
+}
+
+/* ============================================================
+   HOOK: useClientes — CRM / LTV
+   ============================================================ */
+function useClientes() {
+  const [clientes, setClientes] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!db) return;
+    db.collection(CLIENTES_COL).get()
+      .then(snap => {
+        const list = [];
+        snap.forEach(doc => list.push({ telefone: doc.id, ...doc.data() }));
+        list.sort((a,b) => (b.totalGasto||0) - (a.totalGasto||0));
+        setClientes(list);
+      })
+      .catch(e => console.error("Erro ao buscar clientes:", e))
+      .finally(() => setLoading(false));
+  }, []);
+
+  return { clientes, loading };
+}
+
+/* ============================================================
+   HOOK: useCardapio — CRUD do cardápio
+   ============================================================ */
+function useCardapio() {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!db) { setLoading(false); return; }
+    const unsub = db.collection(MENU_COL).onSnapshot(
+      (snap) => {
+        const list = [];
+        snap.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
+        list.sort((a,b) => CATEGORY_ORDER.indexOf(a.categoria) - CATEGORY_ORDER.indexOf(b.categoria) || (a.ordem||0)-(b.ordem||0));
+        setItems(list);
+        setLoading(false);
+      },
+      (err) => { console.error(err); setLoading(false); }
+    );
+    return () => unsub();
+  }, []);
+
+  const addItem = useCallback(async (item) => {
+    await db.collection(MENU_COL).add(item);
+  }, []);
+  const updateItem = useCallback(async (id, patch) => {
+    await db.collection(MENU_COL).doc(id).update(patch);
+  }, []);
+  const deleteItem = useCallback(async (id) => {
+    await db.collection(MENU_COL).doc(id).delete();
+  }, []);
+
+  return { items, loading, addItem, updateItem, deleteItem };
+}
+
+/* Cardápio padrão para popular o Firestore na primeira vez */
+const DEFAULT_MENU_SEED = [
+  { nome:"Só o mi", preco:15, desc:"Pão brioche, carne, molho cheddar e maionese do sertão", categoria:"Tradicionais", ordem:1, ativo:true, ehAdicional:false },
+  { nome:"Só o pitel", preco:15, desc:"Pão brioche, carne, cream cheese e maionese do sertão", categoria:"Tradicionais", ordem:2, ativo:true, ehAdicional:false },
+  { nome:"Meu xodó", preco:17, desc:"Pão brioche, carne, mussarela, alface, tomate e maionese do sertão", categoria:"Tradicionais", ordem:3, ativo:true, ehAdicional:false },
+  { nome:"Bife do oião", preco:18, desc:"Pão brioche, alface, tomate, maionese do sertão, carne, mussarela e ovo", categoria:"Tradicionais", ordem:4, ativo:true, ehAdicional:false },
+  { nome:"Arretado", preco:20, desc:"Pão brioche, carne, mussarela, bacon, alface, tomate e maionese do sertão", categoria:"Tradicionais", ordem:5, ativo:true, ehAdicional:false },
+  { nome:"Indeciso", preco:20, desc:"Pão brioche, alface, tomate, carne, mussarela e calabresa e maionese do sertão", categoria:"Tradicionais", ordem:6, ativo:true, ehAdicional:false },
+  { nome:"Marmota", preco:21, desc:"Pão brioche, carne, mussarela, cream cheese e farofa de bacon crocante e maionese do sertão", categoria:"Tradicionais", ordem:7, ativo:true, ehAdicional:false },
+  { nome:"Pai d' égua", preco:22, desc:"Pão brioche, 2 carnes, molho cheddar e maionese do sertão", categoria:"Especiais", ordem:1, ativo:true, ehAdicional:false },
+  { nome:"Matuto", preco:22, desc:"Pão brioche, 2 carnes, cream cheese e maionese do sertão", categoria:"Especiais", ordem:2, ativo:true, ehAdicional:false },
+  { nome:"Frangote", preco:23, desc:"Pão brioche, frango desfiado, bacon picado, mussarela, alface, tomate e maionese do sertão", categoria:"Especiais", ordem:3, ativo:true, ehAdicional:false },
+  { nome:"Vixe!", preco:25, desc:"Pão brioche, carne, bacon, mussarela, ovo, cream cheese, alface, tomate e maionese do sertão", categoria:"Especiais", ordem:4, ativo:true, ehAdicional:false },
+  { nome:"Abirobado", preco:27, desc:"Pão brioche, 2 carnes, 2 mussarela, barbecue, bacon e maionese do sertão", categoria:"Especiais", ordem:5, ativo:true, ehAdicional:false },
+  { nome:"Eita", preco:32, desc:"Pão brioche, 3 carnes, molho cheddar, bacon e maionese do sertão", categoria:"Especiais", ordem:6, ativo:true, ehAdicional:false },
+  { nome:"Doguito", preco:10, desc:"Pão, salsicha, ketchup, mostarda, parmesão, milho, batata palha e maionese do sertão", categoria:"Dog Prensado", ordem:1, ativo:true, ehAdicional:false },
+  { nome:"Dogsmash", preco:13, desc:"Pão, mostarda, ketchup, parmesão, milho verde, batata palha, salsicha, carne e maionese do sertão", categoria:"Dog Prensado", ordem:2, ativo:true, ehAdicional:false },
+  { nome:"Dogbacon", preco:13, desc:"Pão, salsicha, bacon, ketchup, mostarda, milho verde, parmesão, batata palha e maionese do sertão", categoria:"Dog Prensado", ordem:3, ativo:true, ehAdicional:false },
+  { nome:"Dog-egg", preco:15, desc:"Pão, salsicha, ovo, bacon, milho verde, parmesão, batata palha, mostarda, ketchup e maionese do sertão", categoria:"Dog Prensado", ordem:4, ativo:true, ehAdicional:false },
+  { nome:"Dogzilla", preco:15, desc:"Pão, mostarda, ketchup, parmesão, milho verde, batata palha, salsicha, carne, bacon e maionese do sertão", categoria:"Dog Prensado", ordem:5, ativo:true, ehAdicional:false },
+  { nome:"Qualquer um", preco:23, desc:"Pão, carne do sol desfiada, cream cheese, alface, tomate e maionese do sertão", categoria:"Árabes", ordem:1, ativo:true, ehAdicional:false },
+  { nome:"Gaiato", preco:24, desc:"Pão, 2 carnes, alface, tomate e maionese do sertão", categoria:"Árabes", ordem:2, ativo:true, ehAdicional:false },
+  { nome:"Caipira", preco:25, desc:"Pão, milho verde, alface, tomate, ovo, bacon picado, frango desfiado, mussarela e maionese do sertão", categoria:"Árabes", ordem:3, ativo:true, ehAdicional:false },
+  { nome:"Oxente", preco:26, desc:"Pão, carne do sol desfiada, mussarela, calabresa, ovo, alface, tomate e maionese do sertão", categoria:"Árabes", ordem:4, ativo:true, ehAdicional:false },
+  { nome:"Cabra da peste", preco:27, desc:"Pão, carne, frango desfiado, mussarela, bacon picado, alface, tomate e maionese do sertão", categoria:"Árabes", ordem:5, ativo:true, ehAdicional:false },
+  { nome:"Parrudo", preco:34, desc:"Pão, carne do sol desfiada, mussarela, carne, bacon picado, molho cheddar, ovo, alface, tomate e maionese do sertão", categoria:"Árabes", ordem:6, ativo:true, ehAdicional:false },
+  { nome:"Batata Simples (300g)", preco:14, desc:"", categoria:"Acompanhamentos", ordem:1, ativo:true, ehAdicional:false },
+  { nome:"Batata Especial (300g)", preco:20, desc:"Com cheddar e bacon", categoria:"Acompanhamentos", ordem:2, ativo:true, ehAdicional:false },
+  { nome:"Batata Sertãozinho (300g)", preco:24, desc:"Com carne do sol e cream cheese", categoria:"Acompanhamentos", ordem:3, ativo:true, ehAdicional:false },
+  { nome:"Onion Rings", preco:18, desc:"12 anéis de cebola empanada e frita", categoria:"Acompanhamentos", ordem:4, ativo:true, ehAdicional:false },
+  { nome:"Ovo", preco:2, desc:"", categoria:"Adicionais", ordem:1, ativo:true, ehAdicional:true },
+  { nome:"Salada", preco:2, desc:"", categoria:"Adicionais", ordem:2, ativo:true, ehAdicional:true },
+  { nome:"Cheddar (ou cream cheese)", preco:4, desc:"", categoria:"Adicionais", ordem:3, ativo:true, ehAdicional:true },
+  { nome:"Bacon", preco:4, desc:"", categoria:"Adicionais", ordem:4, ativo:true, ehAdicional:true },
+  { nome:"Cheddar/Bacon (na batata)", preco:6, desc:"", categoria:"Adicionais", ordem:5, ativo:true, ehAdicional:true },
+  { nome:"Carne", preco:8, desc:"", categoria:"Adicionais", ordem:6, ativo:true, ehAdicional:true },
+  { nome:"Frango desfiado", preco:7, desc:"", categoria:"Adicionais", ordem:7, ativo:true, ehAdicional:true },
+  { nome:"Carne do sol", preco:8, desc:"", categoria:"Adicionais", ordem:8, ativo:true, ehAdicional:true },
+  { nome:"Suco (300ml)", preco:6, desc:"", categoria:"Bebidas", ordem:1, ativo:true, ehAdicional:false },
+  { nome:"Água s/gás", preco:3, desc:"", categoria:"Bebidas", ordem:2, ativo:true, ehAdicional:false },
+  { nome:"Água c/gás", preco:4, desc:"", categoria:"Bebidas", ordem:3, ativo:true, ehAdicional:false },
+  { nome:"Refri Lata", preco:6, desc:"", categoria:"Bebidas", ordem:4, ativo:true, ehAdicional:false },
+  { nome:"Refri 1L", preco:10, desc:"", categoria:"Bebidas", ordem:5, ativo:true, ehAdicional:false },
+  { nome:"Heineken", preco:8, desc:"", categoria:"Bebidas", ordem:6, ativo:true, ehAdicional:false },
+  { nome:"Budweiser", preco:7, desc:"", categoria:"Bebidas", ordem:7, ativo:true, ehAdicional:false },
+];
+function PasswordGate({ onSuccess }) {
+  const [pwd, setPwd] = useState("");
+  const [err, setErr] = useState(false);
+
+  const submit = (e) => {
+    e.preventDefault();
+    if (pwd === SENHA_GERENCIAL) {
+      onSuccess();
+    } else {
+      setErr(true);
+      setPwd("");
+      setTimeout(() => setErr(false), 1800);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 relative" style={{background:"radial-gradient(ellipse at top, #1a1410 0%, #0a0a0a 60%)"}}>
+      <div className="anim-rise flex flex-col items-center gap-4 w-full max-w-xs">
+        <CactusMascot className="w-20 h-20" wobble={false} />
+        <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{background:"rgba(255,167,38,0.12)"}}>
+          <Icon.Lock className="w-7 h-7" style={{color:"var(--orange)"}} />
+        </div>
+        <h1 className="font-display text-2xl text-center" style={{color:"var(--cream)"}}>Painel Gerencial</h1>
+        <p className="text-xs text-[var(--cream-dim)] -mt-2">Vendas, cardápio e satisfação dos clientes</p>
+
+        <form onSubmit={submit} className="w-full flex flex-col gap-3 mt-2">
+          <input
+            type="password"
+            autoFocus
+            value={pwd}
+            onChange={(e) => setPwd(e.target.value)}
+            placeholder="Senha de acesso"
+            className={
+              "w-full rounded-xl px-4 py-3 bg-[var(--panel)] border-2 text-[var(--cream)] font-body text-center tracking-widest focus-ring outline-none transition-fast " +
+              (err ? "border-red-600" : "border-[#3d2d1d] focus:border-[var(--green)]")
+            }
+          />
+          {err && <p className="text-red-400 text-xs text-center anim-pop">Senha incorreta. Tenta de novo.</p>}
+          <button type="submit" className="tap-active transition-fast w-full rounded-xl py-3 font-display text-lg" style={{background:"var(--green)", color:"#0a0a0a"}}>
+            Entrar
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   HELPERS: cálculo de NPS e classificação de zona (conforme apostila)
+   ============================================================ */
+function calcNPS(avaliacoes) {
+  const withNps = avaliacoes.filter(a => a.nps !== null && a.nps !== undefined);
+  if (withNps.length === 0) return { score: null, promotores: 0, neutros: 0, detratores: 0, total: 0 };
+  const promotores = withNps.filter(a => a.nps >= 9).length;
+  const neutros = withNps.filter(a => a.nps >= 7 && a.nps <= 8).length;
+  const detratores = withNps.filter(a => a.nps <= 6).length;
+  const total = withNps.length;
+  const score = Math.round(((promotores - detratores) / total) * 100);
+  return { score, promotores, neutros, detratores, total };
+}
+
+function npsZone(score) {
+  if (score === null) return { label: "Sem dados ainda", color: "var(--cream-dim)" };
+  if (score < 0) return { label: "Zona crítica", color: "var(--red)" };
+  if (score < 50) return { label: "Zona de melhoria", color: "var(--orange)" };
+  if (score < 75) return { label: "Zona de qualidade", color: "#60a5fa" };
+  return { label: "Zona de excelência", color: "var(--green)" };
+}
+
+function calcCSAT(avaliacoes) {
+  const withCsat = avaliacoes.filter(a => a.csat !== null && a.csat !== undefined);
+  if (withCsat.length === 0) return null;
+  const sum = withCsat.reduce((s, a) => s + a.csat, 0);
+  return (sum / withCsat.length);
+}
+
+/* ============================================================
+   TELA: Clientes — ranking por valor + risco de churn
+   ============================================================ */
+function ClientesScreen() {
+  const { clientes, loading } = useClientes();
+
+  // LTV simplificado: usa os dados reais já acumulados (totalGasto)
+  // e estima frequência com base em totalVisitas / dias desde a primeira visita.
+  const withLTV = clientes.map(c => {
+    const diasAtivos = Math.max(1, daysSince(c.primeiraVisita));
+    const frequenciaMensal = (c.totalVisitas || 0) / (diasAtivos / 30);
+    const diasSemVoltar = daysSince(c.ultimaVisita);
+    const risco = diasSemVoltar > 30 && c.totalVisitas >= 2; // já foi fiel, mas sumiu
+    return { ...c, frequenciaMensal, diasSemVoltar, risco };
+  });
+
+  const emRisco = withLTV.filter(c => c.risco).sort((a,b) => b.totalGasto - a.totalGasto);
+  const top = [...withLTV].sort((a,b) => (b.totalGasto||0) - (a.totalGasto||0));
+
+  if (loading) {
+    return <p className="text-sm text-[var(--cream-dim)] text-center py-10">Carregando clientes...</p>;
+  }
+
+  if (clientes.length === 0) {
+    return (
+      <div className="flex flex-col items-center text-center py-16 gap-2">
+        <CactusMascot className="w-16 h-16" wobble={false} />
+        <p className="text-[var(--cream-dim)] text-sm">Nenhum cliente com WhatsApp cadastrado ainda.</p>
+        <p className="text-xs text-[var(--cream-dim)] max-w-xs">Isso aparece conforme os clientes informam o WhatsApp (opcional) ao fazer pedidos.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-5">
+      {emRisco.length > 0 && (
+        <div className="leather-tag rounded-2xl p-5 border-red-700">
+          <div className="flex items-center gap-2 mb-2">
+            <Icon.TrendDown className="w-5 h-5" style={{color:"var(--red)"}} />
+            <h3 className="font-display text-lg" style={{color:"var(--cream)"}}>Clientes fiéis que sumiram</h3>
+          </div>
+          <p className="text-xs text-[var(--cream-dim)] mb-3">Já vieram 2+ vezes mas não aparecem há mais de 30 dias. Bom momento pra mandar uma mensagem.</p>
+          <div className="flex flex-col gap-2">
+            {emRisco.map(c => (
+              <div key={c.telefone} className="flex justify-between items-center px-3 py-2 rounded-lg" style={{background:"rgba(211,47,47,0.1)"}}>
+                <div>
+                  <span className="text-sm font-semibold" style={{color:"var(--cream)"}}>{(c.nomes||[]).join(", ")}</span>
+                  <div className="text-xs text-[var(--cream-dim)]">{c.totalVisitas}x · há {c.diasSemVoltar} dias sem voltar</div>
+                </div>
+                <a href={"https://wa.me/55"+c.telefone} target="_blank" rel="noopener noreferrer"
+                  className="tap-active transition-fast text-xs font-bold px-3 py-1.5 rounded-full" style={{background:"var(--green)", color:"#0a0a0a"}}>
+                  WhatsApp
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="leather-tag rounded-2xl p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <Icon.Users className="w-5 h-5" style={{color:"var(--orange)"}} />
+          <h3 className="font-display text-lg" style={{color:"var(--cream)"}}>Ranking de clientes</h3>
+        </div>
+        <div className="flex flex-col gap-2">
+          {top.map((c, idx) => (
+            <div key={c.telefone} className="flex justify-between items-center px-3 py-2.5 rounded-lg bg-[#1a1714]">
+              <div className="flex items-center gap-3">
+                <span className="font-display text-sm w-5 text-center" style={{color:"var(--cream-dim)"}}>{idx+1}</span>
+                <div>
+                  <span className="text-sm font-semibold" style={{color:"var(--cream)"}}>{(c.nomes||[]).join(", ")}</span>
+                  <div className="text-xs text-[var(--cream-dim)]">{c.totalVisitas}x visitas · última há {c.diasSemVoltar}d</div>
+                </div>
+              </div>
+              <span className="font-display text-sm" style={{color:"var(--green)"}}>{fmtMoney(c.totalGasto||0)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+function DashboardScreen({ periodDays, setPeriodDays }) {
+  const { vendas, loading: loadingVendas } = useVendas(periodDays);
+  const { avaliacoes, loading: loadingAval } = useAvaliacoes(periodDays);
+
+  const faturamento = vendas.reduce((s,o) => s + o.itens.reduce((s2,i)=>s2+cartItemTotal(i),0), 0);
+  const ticketMedio = vendas.length > 0 ? faturamento / vendas.length : 0;
+  const nps = calcNPS(avaliacoes);
+  const zone = npsZone(nps.score);
+  const csat = calcCSAT(avaliacoes);
+
+  const comentarios = avaliacoes.filter(a => a.comentario && a.comentario.trim().length > 0);
+  const detratoresComComentario = avaliacoes.filter(a => a.nps !== null && a.nps <= 6 && a.comentario);
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="flex gap-2 overflow-x-auto scrollbar-none">
+        {[{d:1,l:"Hoje"},{d:7,l:"7 dias"},{d:30,l:"30 dias"}].map(p => (
+          <button key={p.d} onClick={() => setPeriodDays(p.d)}
+            className={"tap-active transition-fast px-4 py-2 rounded-full text-sm font-semibold border whitespace-nowrap focus-ring " + (periodDays===p.d ? "border-transparent" : "border-[#3d2d1d] text-[var(--cream-dim)]")}
+            style={periodDays===p.d ? { background:"var(--green)", color:"#0a0a0a" } : {}}>
+            {p.l}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="leather-tag rounded-2xl p-4">
+          <span className="text-xs text-[var(--cream-dim)]">Faturamento</span>
+          <div className="font-display text-2xl mt-1" style={{color:"var(--green)"}}>{fmtMoney(faturamento)}</div>
+        </div>
+        <div className="leather-tag rounded-2xl p-4">
+          <span className="text-xs text-[var(--cream-dim)]">Pedidos encerrados</span>
+          <div className="font-display text-2xl mt-1" style={{color:"var(--orange)"}}>{vendas.length}</div>
+        </div>
+        <div className="leather-tag rounded-2xl p-4">
+          <span className="text-xs text-[var(--cream-dim)]">Ticket médio</span>
+          <div className="font-display text-2xl mt-1" style={{color:"var(--cream)"}}>{fmtMoney(ticketMedio)}</div>
+        </div>
+      </div>
+
+      <div className="leather-tag rounded-2xl p-5">
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="font-display text-lg" style={{color:"var(--cream)"}}>NPS — Net Promoter Score</h3>
+          {nps.score !== null && (
+            <span className="font-display text-3xl" style={{color: zone.color}}>{nps.score}</span>
+          )}
+        </div>
+        <p className="text-xs mb-3" style={{color: zone.color}}>{zone.label}</p>
+        {nps.total > 0 ? (
+          <>
+            <div className="flex h-3 rounded-full overflow-hidden mb-2">
+              <div style={{width: (nps.promotores/nps.total*100)+"%", background:"var(--green)"}}></div>
+              <div style={{width: (nps.neutros/nps.total*100)+"%", background:"var(--orange)"}}></div>
+              <div style={{width: (nps.detratores/nps.total*100)+"%", background:"var(--red)"}}></div>
+            </div>
+            <div className="flex justify-between text-[11px] text-[var(--cream-dim)]">
+              <span>{nps.promotores} promotores</span>
+              <span>{nps.neutros} neutros</span>
+              <span>{nps.detratores} detratores</span>
+            </div>
+          </>
+        ) : (
+          <p className="text-sm text-[var(--cream-dim)]">Ainda sem avaliações neste período.</p>
+        )}
+      </div>
+
+      {csat !== null && (
+        <div className="leather-tag rounded-2xl p-5">
+          <div className="flex items-center justify-between">
+            <h3 className="font-display text-lg" style={{color:"var(--cream)"}}>CSAT — Atendimento</h3>
+            <div className="flex items-center gap-1">
+              <span className="font-display text-2xl" style={{color:"var(--orange)"}}>{csat.toFixed(1)}</span>
+              <Icon.Star className="w-5 h-5" style={{color:"var(--orange)"}} />
+            </div>
+          </div>
+          <p className="text-xs text-[var(--cream-dim)] mt-1">Média de satisfação com o atendimento (1 a 5 estrelas)</p>
+        </div>
+      )}
+
+      {detratoresComComentario.length > 0 && (
+        <div className="leather-tag rounded-2xl p-5 border-red-700">
+          <div className="flex items-center gap-2 mb-3">
+            <Icon.Alert className="w-5 h-5" style={{color:"var(--red)"}} />
+            <h3 className="font-display text-lg" style={{color:"var(--cream)"}}>Close the Loop — atenção aqui</h3>
+          </div>
+          <p className="text-xs text-[var(--cream-dim)] mb-3">Clientes insatisfeitos (nota 0-6) que deixaram comentário. Vale considerar um contato de recuperação.</p>
+          <div className="flex flex-col gap-2">
+            {detratoresComComentario.map(a => (
+              <div key={a.docId} className="px-3 py-2 rounded-lg" style={{background:"rgba(211,47,47,0.1)"}}>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm font-semibold" style={{color:"var(--cream)"}}>{a.nome}</span>
+                  <span className="text-xs font-bold" style={{color:"var(--red)"}}>NPS {a.nps}</span>
+                </div>
+                <p className="text-xs text-[var(--cream-dim)]">{a.comentario}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {comentarios.length > 0 && (
+        <div className="leather-tag rounded-2xl p-5">
+          <h3 className="font-display text-lg mb-3" style={{color:"var(--cream)"}}>Todos os comentários</h3>
+          <div className="flex flex-col gap-2">
+            {comentarios.map(a => (
+              <div key={a.docId} className="px-3 py-2 rounded-lg bg-[#1a1714]">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm font-semibold" style={{color:"var(--cream)"}}>{a.nome}</span>
+                  <span className="text-xs text-[var(--cream-dim)]">{formatDate(a.criadoEm)}</span>
+                </div>
+                <p className="text-xs text-[var(--cream-dim)]">{a.comentario}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   MODAL: Criar/editar item do cardápio
+   ============================================================ */
+function ItemFormModal({ item, onClose, onSave, pushToast }) {
+  const isEdit = !!item;
+  const [nome, setNome] = useState(item ? item.nome : "");
+  const [preco, setPreco] = useState(item ? String(item.preco) : "");
+  const [desc, setDesc] = useState(item ? item.desc || "" : "");
+  const [categoria, setCategoria] = useState(item ? item.categoria : CATEGORY_ORDER[0]);
+  const [ehAdicional, setEhAdicional] = useState(item ? !!item.ehAdicional : categoria === "Adicionais");
+  const [saving, setSaving] = useState(false);
+
+  const submit = async () => {
+    const precoNum = parseFloat(preco.replace(",", "."));
+    if (!nome.trim() || isNaN(precoNum)) {
+      pushToast("Preencha nome e preço corretamente.", "error");
+      return;
+    }
+    setSaving(true);
+    try {
+      await onSave({
+        nome: nome.trim(), preco: precoNum, desc: desc.trim(), categoria,
+        ehAdicional: categoria === "Adicionais" ? true : ehAdicional,
+        ativo: item ? item.ativo : true,
+        ordem: item ? item.ordem : 99,
+      });
+      onClose();
+    } catch (e) {
+      pushToast("Erro ao salvar item.", "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center bg-black/70 px-0 sm:px-4" onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} className="anim-sheet sm:anim-pop w-full sm:max-w-md leather-tag rounded-t-2xl sm:rounded-2xl p-5 max-h-[88vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-display text-xl" style={{color:"var(--cream)"}}>{isEdit ? "Editar item" : "Novo item"}</h3>
+          <button onClick={onClose} className="text-[var(--cream-dim)] focus-ring rounded"><Icon.X className="w-5 h-5"/></button>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <div>
+            <label className="text-xs text-[var(--cream-dim)] mb-1 block">Nome</label>
+            <input value={nome} onChange={e => setNome(e.target.value)} placeholder="Ex: Arretado"
+              className="w-full rounded-xl px-3 py-2.5 bg-[#1a1714] border border-[#3d2d1d] text-[var(--cream)] text-sm focus-ring outline-none focus:border-[var(--green)]" />
+          </div>
+          <div>
+            <label className="text-xs text-[var(--cream-dim)] mb-1 block">Preço (R$)</label>
+            <input value={preco} onChange={e => setPreco(e.target.value)} placeholder="Ex: 20"
+              className="w-full rounded-xl px-3 py-2.5 bg-[#1a1714] border border-[#3d2d1d] text-[var(--cream)] text-sm focus-ring outline-none focus:border-[var(--green)]" />
+          </div>
+          <div>
+            <label className="text-xs text-[var(--cream-dim)] mb-1 block">Descrição</label>
+            <textarea value={desc} onChange={e => setDesc(e.target.value)} rows={2} placeholder="Ingredientes..."
+              className="w-full rounded-xl px-3 py-2.5 bg-[#1a1714] border border-[#3d2d1d] text-[var(--cream)] text-sm focus-ring outline-none focus:border-[var(--green)] resize-none" />
+          </div>
+          <div>
+            <label className="text-xs text-[var(--cream-dim)] mb-1 block">Categoria</label>
+            <div className="flex gap-2 flex-wrap">
+              {CATEGORY_ORDER.map(cat => (
+                <button key={cat} onClick={() => setCategoria(cat)}
+                  className={"tap-active transition-fast px-3 py-1.5 rounded-full text-xs font-semibold border " + (categoria===cat ? "border-transparent" : "border-[#3d2d1d] text-[var(--cream-dim)]")}
+                  style={categoria===cat ? { background:"var(--green)", color:"#0a0a0a" } : {}}>
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+          {categoria !== "Adicionais" && (
+            <label className="flex items-center gap-2 text-sm cursor-pointer" style={{color:"var(--cream-dim)"}}>
+              <input type="checkbox" checked={ehAdicional} onChange={e => setEhAdicional(e.target.checked)} className="w-4 h-4" />
+              Também aparece como adicional no modal de lanches
+            </label>
+          )}
+        </div>
+
+        <button onClick={submit} disabled={saving}
+          className="tap-active transition-fast w-full rounded-xl py-3 font-display mt-5 disabled:opacity-50" style={{background:"var(--green)", color:"#0a0a0a"}}>
+          {saving ? "Salvando..." : (isEdit ? "Salvar alterações" : "Adicionar ao cardápio")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   TELA: Cardápio — CRUD
+   ============================================================ */
+function CardapioScreen({ pushToast }) {
+  const { items, loading, addItem, updateItem, deleteItem } = useCardapio();
+  const [editing, setEditing] = useState(null);
+  const [creating, setCreating] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [importing, setImporting] = useState(false);
+
+  const grouped = {};
+  items.forEach(item => {
+    if (!grouped[item.categoria]) grouped[item.categoria] = [];
+    grouped[item.categoria].push(item);
+  });
+
+  const importDefault = async () => {
+    setImporting(true);
+    try {
+      const batch = db.batch();
+      DEFAULT_MENU_SEED.forEach(item => {
+        const ref = db.collection(MENU_COL).doc();
+        batch.set(ref, item);
+      });
+      await batch.commit();
+      pushToast("Cardápio padrão importado!", "success");
+    } catch (e) {
+      pushToast("Erro ao importar cardápio.", "error");
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const toggleAtivo = async (item) => {
+    try { await updateItem(item.id, { ativo: !item.ativo }); }
+    catch (e) { pushToast("Erro ao atualizar item.", "error"); }
+  };
+
+  const handleSave = async (data) => {
+    if (editing) await updateItem(editing.id, data);
+    else await addItem(data);
+    pushToast(editing ? "Item atualizado!" : "Item adicionado ao cardápio!", "success");
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteItem(confirmDelete.id);
+      pushToast("Item removido do cardápio.", "success");
+      setConfirmDelete(null);
+    } catch (e) {
+      pushToast("Erro ao remover item.", "error");
+    }
+  };
+
+  if (loading) {
+    return <p className="text-sm text-[var(--cream-dim)] text-center py-10">Carregando cardápio...</p>;
+  }
+
+  return (
+    <div className="flex flex-col gap-5">
+      {items.length === 0 && (
+        <div className="leather-tag rounded-2xl p-6 text-center flex flex-col items-center gap-3">
+          <CactusMascot className="w-16 h-16" wobble={false} />
+          <p className="text-sm text-[var(--cream-dim)]">O cardápio está vazio no banco de dados.</p>
+          <button onClick={importDefault} disabled={importing}
+            className="tap-active transition-fast px-5 py-2.5 rounded-xl font-display disabled:opacity-50" style={{background:"var(--green)", color:"#0a0a0a"}}>
+            {importing ? "Importando..." : "Importar cardápio padrão do Trilhas do Sertão"}
+          </button>
+        </div>
+      )}
+
+      {items.length > 0 && (
+        <button onClick={() => setCreating(true)} className="tap-active transition-fast w-full rounded-xl py-3 font-display border-2 border-dashed border-[#3d2d1d] text-[var(--cream-dim)] flex items-center justify-center gap-2">
+          <Icon.Plus className="w-4 h-4" /> Adicionar novo item
+        </button>
+      )}
+
+      {CATEGORY_ORDER.filter(cat => grouped[cat]).map(cat => (
+        <div key={cat}>
+          <h3 className="font-display text-base mb-2" style={{color:"var(--orange)"}}>{cat}</h3>
+          <div className="flex flex-col gap-2">
+            {grouped[cat].map(item => (
+              <div key={item.id} className={"leather-tag rounded-xl p-3 flex items-center gap-3 " + (item.ativo === false ? "opacity-50" : "")}>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-sm" style={{color:"var(--cream)"}}>{item.nome}</span>
+                    {item.ativo === false && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-neutral-800 text-neutral-400">oculto</span>}
+                  </div>
+                  <span className="text-xs" style={{color:"var(--green)"}}>{fmtMoney(item.preco)}</span>
+                </div>
+                <button onClick={() => toggleAtivo(item)} className="tap-active transition-fast p-2 rounded-lg" title={item.ativo === false ? "Mostrar no cardápio" : "Ocultar do cardápio"}>
+                  <Icon.EyeOff className="w-4 h-4" style={{color: item.ativo === false ? "var(--cream-dim)" : "var(--orange)"}} />
+                </button>
+                <button onClick={() => setEditing(item)} className="tap-active transition-fast p-2 rounded-lg">
+                  <Icon.Edit className="w-4 h-4" style={{color:"var(--cream-dim)"}} />
+                </button>
+                <button onClick={() => setConfirmDelete(item)} className="tap-active transition-fast p-2 rounded-lg">
+                  <Icon.Trash className="w-4 h-4 text-red-500" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      {(creating || editing) && (
+        <ItemFormModal item={editing} onClose={() => { setCreating(false); setEditing(null); }} onSave={handleSave} pushToast={pushToast} />
+      )}
+
+      {confirmDelete && (
+        <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center bg-black/70 px-4" onClick={() => setConfirmDelete(null)}>
+          <div onClick={e => e.stopPropagation()} className="anim-sheet sm:anim-pop w-full sm:max-w-sm leather-tag rounded-2xl p-5">
+            <h3 className="font-display text-lg mb-1" style={{color:"var(--cream)"}}>Remover "{confirmDelete.nome}"?</h3>
+            <p className="text-sm text-[var(--cream-dim)] mb-4">O item some do cardápio para sempre. Se for sazonal, prefira "ocultar".</p>
+            <div className="flex gap-2">
+              <button onClick={() => setConfirmDelete(null)} className="tap-active transition-fast flex-1 rounded-xl py-2.5 font-semibold border border-[#3d2d1d] text-[var(--cream-dim)]">Cancelar</button>
+              <button onClick={handleDelete} className="tap-active transition-fast flex-1 rounded-xl py-2.5 font-semibold" style={{background:"var(--red)", color:"#fff"}}>Remover</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   APP RAIZ — navegação por abas
+   ============================================================ */
+function App() {
+  const [authed, setAuthed] = useState(false);
+  const [tab, setTab] = useState("dashboard"); // dashboard | clientes | cardapio
+  const [periodDays, setPeriodDays] = useState(7);
+  const { toasts, push, dismiss } = useToasts();
+
+  if (!authed) {
+    return <PasswordGate onSuccess={() => setAuthed(true)} />;
+  }
+
+  return (
+    <div className="min-h-screen pb-10" style={{background:"var(--bg)"}}>
+      <ToastStack toasts={toasts} dismiss={dismiss} />
+
+      <header className="px-4 pt-5 pb-4 flex flex-col items-center gap-1 sticky top-0 z-30" style={{background:"linear-gradient(180deg, var(--bg) 85%, transparent)"}}>
+        <LogoMark size="text-2xl" />
+        <span className="text-xs text-[var(--cream-dim)] -mt-1">Painel Gerencial</span>
+      </header>
+
+      <div className="px-4 flex gap-2 mb-5 overflow-x-auto scrollbar-none justify-center">
+        {[
+          { key: "dashboard", label: "Vendas & Satisfação", icon: Icon.ChartBar },
+          { key: "clientes", label: "Clientes", icon: Icon.Users },
+          { key: "cardapio", label: "Cardápio", icon: Icon.Menu },
+        ].map(t => (
+          <button key={t.key} onClick={() => setTab(t.key)}
+            className={"tap-active transition-fast px-4 py-2 rounded-full text-sm font-semibold border whitespace-nowrap focus-ring flex items-center gap-1.5 " + (tab===t.key ? "border-transparent" : "border-[#3d2d1d] text-[var(--cream-dim)]")}
+            style={tab===t.key ? { background:"var(--green)", color:"#0a0a0a" } : {}}>
+            <t.icon className="w-4 h-4" />
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      <main className="px-4 max-w-3xl mx-auto">
+        {tab === "dashboard" && <DashboardScreen periodDays={periodDays} setPeriodDays={setPeriodDays} />}
+        {tab === "clientes" && <ClientesScreen />}
+        {tab === "cardapio" && <CardapioScreen pushToast={push} />}
+      </main>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
+</script>
+
+</body>
+</html>

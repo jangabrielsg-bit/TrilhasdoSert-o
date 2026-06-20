@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Trilhas do Sertão Burger — Garçom</title>
+<meta name="theme-color" content="#0a0a0a" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rye&family=Rubik:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,500&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<style>
+  :root{
+    --bg: #0a0a0a;
+    --bg-soft: #141210;
+    --panel: #1a1714;
+    --leather: #2a1f16;
+    --green: #4ADE80;
+    --green-dim: #2e7d52;
+    --orange: #FFA726;
+    --orange-deep: #E65100;
+    --red: #D32F2F;
+    --cream: #F5F1E8;
+    --cream-dim: #c9c2b3;
+  }
+  html,body{ background:var(--bg); margin:0; }
+  #root{ min-height:100vh; }
+
+  .font-display{ font-family:'Rye', serif; }
+  .font-body{ font-family:'Rubik', sans-serif; }
+
+  .brand-burn{
+    text-shadow: 0 0 1px rgba(0,0,0,0.6), 0 2px 0 rgba(0,0,0,0.5), 0 0 18px currentColor;
+    letter-spacing: 0.02em;
+  }
+
+  .leather-tag{
+    background: linear-gradient(160deg, #2a1f16 0%, #1f1610 100%);
+    border: 1px solid #3d2d1d;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 14px rgba(0,0,0,0.5);
+    position:relative;
+  }
+  .leather-tag::before{
+    content:'';
+    position:absolute; top:10px; left:10px;
+    width:6px; height:6px; border-radius:50%;
+    background:#3d2d1d;
+    box-shadow: inset 0 1px 1px rgba(0,0,0,0.6), 0 0 0 2px #161310;
+  }
+
+  .grain-overlay{
+    position:fixed; inset:0; pointer-events:none; z-index:0; opacity:0.05; mix-blend-mode:overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  @keyframes stampIn{
+    0%{ transform: scale(2.2) rotate(-8deg); opacity:0; }
+    60%{ transform: scale(0.92) rotate(2deg); opacity:1; }
+    100%{ transform: scale(1) rotate(0deg); opacity:1; }
+  }
+  .anim-stamp{ animation: stampIn 0.45s cubic-bezier(.2,1.4,.4,1) both; }
+
+  @keyframes riseIn{
+    0%{ opacity:0; transform: translateY(14px); }
+    100%{ opacity:1; transform: translateY(0); }
+  }
+  .anim-rise{ animation: riseIn 0.32s ease-out both; }
+
+  @keyframes popIn{
+    0%{ opacity:0; transform: scale(0.85); }
+    100%{ opacity:1; transform: scale(1); }
+  }
+  .anim-pop{ animation: popIn 0.22s cubic-bezier(.3,1.6,.5,1) both; }
+
+  @keyframes wobbleCactus{
+    0%,100%{ transform: rotate(-2deg); }
+    50%{ transform: rotate(2deg); }
+  }
+  .wobble{ animation: wobbleCactus 3.2s ease-in-out infinite; }
+
+  @keyframes slideUpSheet{
+    0%{ transform: translateY(100%); }
+    100%{ transform: translateY(0); }
+  }
+  .anim-sheet{ animation: slideUpSheet 0.28s cubic-bezier(.2,.9,.3,1) both; }
+
+  ::-webkit-scrollbar{ height:8px; width:8px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  ::-webkit-scrollbar-thumb{ background:#3d2d1d; border-radius:8px; }
+  .scrollbar-none::-webkit-scrollbar{ display:none; }
+  .scrollbar-none{ -ms-overflow-style:none; scrollbar-width:none; }
+
+  .tap-active:active{ transform: scale(0.96); }
+  *{ -webkit-tap-highlight-color: transparent; }
+
+  .focus-ring:focus-visible{ outline: 2px solid var(--green); outline-offset: 2px; }
+
+  .transition-fast{ transition: all 0.15s cubic-bezier(.3,.7,.4,1); }
+  .transition-med{ transition: all 0.25s cubic-bezier(.3,.7,.4,1); }
+
+  @media (prefers-reduced-motion: reduce){
+    .anim-stamp, .anim-rise, .anim-pop, .wobble, .anim-sheet{ animation: none !important; }
+  }
+</style>
+</head>
+<body class="font-body">
+<div id="root">
+  <div id="fallback-loading" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0a0a0a;color:#c9c2b3;font-family:sans-serif;text-align:center;padding:24px;gap:8px;">
+    <div style="font-size:14px;">Carregando o cardápio...</div>
+    <div style="font-size:12px;opacity:0.6;">Se isso não sair daqui em alguns segundos, recarregue a página ou verifique sua conexão.</div>
+  </div>
+</div>
+<div class="grain-overlay"></div>
+
+<script>
+  setTimeout(function() {
+    var fallback = document.getElementById('fallback-loading');
+    if (fallback && document.body.contains(fallback)) {
+      fallback.innerHTML =
+        '<div style="font-size:16px;color:#ff8a8a;">Não consegui carregar o app.</div>' +
+        '<div style="font-size:13px;opacity:0.85;max-width:340px;">Isso geralmente acontece quando algum escudo/bloqueador do navegador impede o carregamento de scripts. Tente:</div>' +
+        '<div style="font-size:13px;opacity:0.85;max-width:340px;text-align:left;">' +
+          '1. Desative o Brave Shield (ícone laranja na barra de endereço) ou o AdBlock/uBlock para este site<br>' +
+          '2. Recarregue a página<br>' +
+          '3. Se persistir, tente em outro navegador ou aba anônima' +
+        '</div>' +
+        '<button onclick="window.location.reload()" style="margin-top:8px;padding:10px 20px;background:#4ADE80;color:#0a0a0a;border:none;border-radius:10px;font-weight:bold;cursor:pointer;">Recarregar</button>';
+    }
+  }, 6000);
+</script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, useRef, useCallback } = React;
+
+/* ============================================================
+   FIREBASE CONFIG — mesmo projeto usado pelos 4 apps
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyASBRpDyxqPhzwgXL7fOBN3Gte1pOF89Dw",
+  authDomain: "trilhasdosertao-e0c36.firebaseapp.com",
+  projectId: "trilhasdosertao-e0c36",
+  storageBucket: "trilhasdosertao-e0c36.firebasestorage.app",
+  messagingSenderId: "1053469673184",
+  appId: "1:1053469673184:web:04a8964e48863df322b285"
+};
+
+let app, db;
+try {
+  app = firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+  try { db.enablePersistence({ synchronizeTabs: true }); } catch(e) {}
+} catch (e) {
+  console.error("Erro ao iniciar Firebase:", e);
+}
+
+const MENU_COL = "cardapio";
+const ORDERS_COL = "pedidos";
+const CLIENTES_COL = "clientes";
+const AVALIACOES_COL = "avaliacoes";
+const HISTORY_COL = "historico_vendas";
+const SENHA_GARCOM = "trilhas2026";
+
+const CATEGORY_ORDER = ["Tradicionais","Especiais","Dog Prensado","Árabes","Acompanhamentos","Adicionais","Bebidas"];
+const CUSTOMIZABLE_CATEGORIES = new Set(["Tradicionais", "Especiais", "Dog Prensado", "Árabes"]);
+
+const STATUS = {
+  RECEBIDO: "recebido",
+  PREPARO: "preparo",
+  PRONTO: "pronto",
+  ENTREGUE: "entregue",
+  FECHADO: "fechado",
+};
+
+const STATUS_LABEL = {
+  [STATUS.RECEBIDO]: "Recebido",
+  [STATUS.PREPARO]: "Na brasa",
+  [STATUS.PRONTO]: "Pronto",
+  [STATUS.ENTREGUE]: "Entregue",
+  [STATUS.FECHADO]: "Fechado",
+};
+
+function uid(){
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+}
+
+function fmtMoney(v) { return "R$ " + v.toFixed(2).replace(".", ","); }
+
+function formatClock(ts){
+  const d = new Date(ts);
+  return d.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+}
+
+function formatDate(ts) {
+  const d = new Date(ts);
+  return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
+}
+
+function cartItemTotal(entry) {
+  const addicionaisTotal = (entry.adicionais || []).reduce((s, a) => s + a.preco, 0);
+  return (entry.preco + addicionaisTotal) * entry.qtd;
+}
+
+/* ============================================================
+   MASCOTE: Cacto sertanejo de chapéu, bandana e bigode
+   ============================================================ */
+function CactusMascot({ className = "w-24 h-24", wobble = true, holding = "fries" }) {
+  return (
+    <svg viewBox="0 0 200 220" className={(wobble ? "wobble " : "") + className} xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="100" cy="208" rx="46" ry="8" fill="#000" opacity="0.35" />
+      <path d="M100 60 C 70 60, 55 85, 58 115 C 60 145, 70 175, 75 195 L 125 195 C 130 175, 140 145, 142 115 C 145 85, 130 60, 100 60 Z" fill="#3FA34D" stroke="#2C7A39" strokeWidth="3"/>
+      <path d="M58 120 C 35 118, 25 100, 32 85 C 38 95, 48 102, 60 105 Z" fill="#3FA34D" stroke="#2C7A39" strokeWidth="3"/>
+      <path d="M142 120 C 165 110, 172 88, 162 72 C 158 85, 150 96, 140 102 Z" fill="#3FA34D" stroke="#2C7A39" strokeWidth="3"/>
+      {[...Array(7)].map((_,i)=>(
+        <line key={i} x1={72 + i*8} y1={150 + (i%2)*10} x2={68 + i*8} y2={160 + (i%2)*10} stroke="#1f5a29" strokeWidth="2" strokeLinecap="round"/>
+      ))}
+      <ellipse cx="100" cy="58" rx="48" ry="11" fill="#7a4a23" stroke="#522f15" strokeWidth="3"/>
+      <path d="M75 58 C 75 35, 85 25, 100 25 C 115 25, 125 35, 125 58 Z" fill="#8a5a2c" stroke="#522f15" strokeWidth="3"/>
+      <rect x="80" y="50" width="40" height="7" rx="3" fill="#522f15"/>
+      <circle cx="86" cy="92" r="5.5" fill="#1a1a1a"/>
+      <circle cx="114" cy="92" r="5.5" fill="#1a1a1a"/>
+      <circle cx="88" cy="90" r="1.6" fill="#fff"/>
+      <circle cx="116" cy="90" r="1.6" fill="#fff"/>
+      <path d="M82 104 C 90 110, 96 110, 100 106 C 104 110, 110 110, 118 104 C 114 116, 104 118, 100 114 C 96 118, 86 116, 82 104 Z" fill="#5a3a1a"/>
+      <path d="M92 112 Q100 120 108 112" stroke="#1a1a1a" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+      <path d="M62 128 C 80 138, 120 138, 138 128 L 134 140 C 115 148, 85 148, 66 140 Z" fill="#D32F2F" stroke="#a02323" strokeWidth="2"/>
+      <path d="M66 140 L 58 152 L 70 148 Z" fill="#D32F2F" stroke="#a02323" strokeWidth="2"/>
+      <path d="M134 140 L 142 152 L 130 148 Z" fill="#D32F2F" stroke="#a02323" strokeWidth="2"/>
+      {holding === "fries" && (
+        <g transform="translate(150,55) rotate(15)">
+          <path d="M-10 30 L10 30 L7 -5 L-7 -5 Z" fill="#D32F2F"/>
+          <rect x="-9" y="-22" width="4" height="22" rx="2" fill="#FFD54F"/>
+          <rect x="-2" y="-26" width="4" height="26" rx="2" fill="#FFD54F"/>
+          <rect x="5" y="-20" width="4" height="20" rx="2" fill="#FFD54F"/>
+        </g>
+      )}
+    </svg>
+  );
+}
+
+function LogoMark({ size = "text-3xl" }) {
+  return (
+    <div className="flex flex-col items-center select-none">
+      <div className={"font-display brand-burn " + size} style={{color:"var(--green)"}}>Trilhas do Sertão</div>
+      <div className="font-display text-sm -mt-1" style={{color:"var(--orange)"}}>★ Burger ★</div>
+    </div>
+  );
+}
+
+const Icon = {
+  Plus: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" {...p}><path d="M12 5v14M5 12h14"/></svg>),
+  Minus: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" {...p}><path d="M5 12h14"/></svg>),
+  Clock: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>),
+  Check: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M20 6 9 17l-5-5"/></svg>),
+  Alert: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/></svg>),
+  Trash: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>),
+  Receipt: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M4 2h16v20l-3-2-3 2-3-2-3 2-3-2-1 2V2Z"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>),
+  ArrowLeft: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M19 12H5M12 19l-7-7 7-7"/></svg>),
+  Lock: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>),
+  Bell: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>),
+  Flame: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M8.5 14.5A2.5 2.5 0 0 0 11 17a2.5 2.5 0 0 0 2.5-2.5c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7.5 7.5 0 1 1-15 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5"/></svg>),
+  X: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M18 6 6 18M6 6l12 12"/></svg>),
+  Phone: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>),
+  Heart: (p)=>(<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z"/></svg>),
+  Star: (p)=>(<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" {...p}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>),
+};
+
+/* ============================================================
+   HOOK: useOrders — pedidos ativos + ações de status/exclusão/arquivo
+   ============================================================ */
+function useOrders() {
+  const [orders, setOrders] = useState([]);
+  const [connected, setConnected] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!db) { setError("Firebase não configurado."); return; }
+    const unsub = db.collection(ORDERS_COL)
+      .orderBy("criadoEm", "desc")
+      .onSnapshot(
+        (snap) => {
+          setConnected(true);
+          setError(null);
+          const list = [];
+          snap.forEach(doc => list.push({ docId: doc.id, ...doc.data() }));
+          setOrders(list);
+        },
+        (err) => {
+          console.error("Firestore erro:", err);
+          setConnected(false);
+          setError(err.code || "erro-desconhecido");
+        }
+      );
+    return () => unsub();
+  }, []);
+
+  const updateOrder = useCallback(async (docId, patch) => {
+    if (!db) throw new Error("sem-firebase");
+    await db.collection(ORDERS_COL).doc(docId).update(patch);
+  }, []);
+
+  const deleteOrder = useCallback(async (docId) => {
+    if (!db) throw new Error("sem-firebase");
+    await db.collection(ORDERS_COL).doc(docId).delete();
+  }, []);
+
+  // Move pedidos para o histórico de vendas e remove da coleção ativa.
+  const archiveOrders = useCallback(async (ordersToArchive) => {
+    if (!db) throw new Error("sem-firebase");
+    const batch = db.batch();
+    ordersToArchive.forEach(o => {
+      const { docId, ...data } = o;
+      const histRef = db.collection(HISTORY_COL).doc(docId);
+      batch.set(histRef, { ...data, status: STATUS.FECHADO, contaPedida: false, fechadoEm: Date.now() });
+      const activeRef = db.collection(ORDERS_COL).doc(docId);
+      batch.delete(activeRef);
+    });
+    await batch.commit();
+  }, []);
+
+  return { orders, connected, error, updateOrder, deleteOrder, archiveOrders };
+}
+
+/* Histórico de vendas — lido sob demanda quando o garçom abre a aba */
+function useHistory(enabled) {
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const load = useCallback(async () => {
+    if (!db) return;
+    setLoading(true);
+    try {
+      const startOfDay = new Date();
+      startOfDay.setHours(0,0,0,0);
+      const snap = await db.collection(HISTORY_COL)
+        .where("fechadoEm", ">=", startOfDay.getTime())
+        .orderBy("fechadoEm", "desc")
+        .get();
+      const list = [];
+      snap.forEach(doc => list.push({ docId: doc.id, ...doc.data() }));
+      setHistory(list);
+    } catch (e) {
+      console.error("Erro ao buscar histórico:", e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { if (enabled) load(); }, [enabled, load]);
+
+  return { history, loading, reload: load };
+}
+
+/* Busca dados de CRM do cliente (telefone) para o garçom ver histórico */
+function useClienteInfo(telefone) {
+  const [cliente, setCliente] = useState(null);
+  useEffect(() => {
+    if (!db || !telefone) { setCliente(null); return; }
+    db.collection(CLIENTES_COL).doc(telefone).get().then(doc => {
+      setCliente(doc.exists ? doc.data() : null);
+    }).catch(() => setCliente(null));
+  }, [telefone]);
+  return cliente;
+}
+
+/* Beep simples via WebAudio para notificar novo pedido */
+function playBeep(times = 1) {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new Ctx();
+    for (let i = 0; i < times; i++) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = 880;
+      gain.gain.value = 0.15;
+      osc.connect(gain); gain.connect(ctx.destination);
+      const start = ctx.currentTime + i * 0.25;
+      osc.start(start);
+      gain.gain.setValueAtTime(0.15, start);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.18);
+      osc.stop(start + 0.2);
+    }
+  } catch (e) { /* silencioso se navegador bloquear áudio */ }
+}
+
+function useToasts() {
+  const [toasts, setToasts] = useState([]);
+  const push = useCallback((msg, type = "info") => {
+    const id = uid();
+    setToasts(t => [...t, { id, msg, type }]);
+    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 4200);
+  }, []);
+  const dismiss = useCallback((id) => setToasts(t => t.filter(x => x.id !== id)), []);
+  return { toasts, push, dismiss };
+}
+
+function ToastStack({ toasts, dismiss }) {
+  return (
+    <div className="fixed top-4 right-4 left-4 sm:left-auto z-[200] flex flex-col gap-2 items-end pointer-events-none">
+      {toasts.map(t => (
+        <div key={t.id}
+          onClick={() => dismiss(t.id)}
+          className={
+            "pointer-events-auto anim-pop max-w-sm w-full sm:w-80 rounded-xl px-4 py-3 shadow-2xl border font-body text-sm cursor-pointer " +
+            (t.type === "error" ? "bg-red-950 border-red-600 text-red-100" :
+             t.type === "success" ? "bg-emerald-950 border-emerald-600 text-emerald-100" :
+             "bg-neutral-900 border-neutral-700 text-neutral-100")
+          }>
+          <div className="flex items-start gap-2">
+            {t.type === "error" && <Icon.Alert className="w-5 h-5 mt-0.5 flex-shrink-0" />}
+            {t.type === "success" && <Icon.Check className="w-5 h-5 mt-0.5 flex-shrink-0" />}
+            {t.type === "info" && <Icon.Bell className="w-5 h-5 mt-0.5 flex-shrink-0" />}
+            <span>{t.msg}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+function PasswordGate({ onSuccess }) {
+  const [pwd, setPwd] = useState("");
+  const [err, setErr] = useState(false);
+
+  const submit = (e) => {
+    e.preventDefault();
+    if (pwd === SENHA_GARCOM) {
+      onSuccess();
+    } else {
+      setErr(true);
+      setPwd("");
+      setTimeout(() => setErr(false), 1800);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 relative" style={{background:"radial-gradient(ellipse at top, #1a1410 0%, #0a0a0a 60%)"}}>
+      <div className="anim-rise flex flex-col items-center gap-4 w-full max-w-xs">
+        <CactusMascot className="w-20 h-20" />
+        <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{background:"rgba(255,167,38,0.12)"}}>
+          <Icon.Lock className="w-7 h-7" style={{color:"var(--orange)"}} />
+        </div>
+        <h1 className="font-display text-2xl text-center" style={{color:"var(--cream)"}}>Acesso do Garçom</h1>
+
+        <form onSubmit={submit} className="w-full flex flex-col gap-3 mt-2">
+          <input
+            type="password"
+            autoFocus
+            value={pwd}
+            onChange={(e) => setPwd(e.target.value)}
+            placeholder="Senha de acesso"
+            className={
+              "w-full rounded-xl px-4 py-3 bg-[var(--panel)] border-2 text-[var(--cream)] font-body text-center tracking-widest focus-ring outline-none transition-fast " +
+              (err ? "border-red-600" : "border-[#3d2d1d] focus:border-[var(--green)]")
+            }
+          />
+          {err && <p className="text-red-400 text-xs text-center anim-pop">Senha incorreta. Tenta de novo.</p>}
+          <button type="submit" className="tap-active transition-fast w-full rounded-xl py-3 font-display text-lg" style={{background:"var(--green)", color:"#0a0a0a"}}>
+            Entrar
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   COMPONENTE: Card de pedido — destaca cliente recorrente e VIP
+   ============================================================ */
+function OrderCard({ order, now, lateMinutes = 12, children }) {
+  const mins = Math.floor((now - order.criadoEm) / 60000);
+  const late = order.status !== STATUS.PRONTO && order.status !== STATUS.ENTREGUE && order.status !== STATUS.FECHADO && mins >= lateMinutes;
+  const cliente = useClienteInfo(order.telefone);
+  const recorrente = cliente && cliente.totalVisitas >= 2;
+
+  return (
+    <div className={"leather-tag rounded-2xl p-4 anim-rise " + (late ? "pulse-late border-red-700" : "")}>
+      <div className="flex justify-between items-start mb-2">
+        <div>
+          <div className="font-display text-lg flex items-center gap-1.5" style={{color:"var(--cream)"}}>
+            {order.nome} <span className="text-[var(--cream-dim)]" style={{fontSize:"0.65em"}}>#{order.codigo}</span>
+            {recorrente && <Icon.Heart className="w-3.5 h-3.5" style={{color:"var(--red)"}} title="Cliente recorrente" />}
+          </div>
+          <div className="text-[11px] text-[var(--cream-dim)]">{formatClock(order.criadoEm)}</div>
+          {recorrente && (
+            <div className="text-[11px] mt-0.5" style={{color:"var(--orange)"}}>
+              {cliente.totalVisitas}ª visita · já gastou {fmtMoney(cliente.totalGasto || 0)}
+            </div>
+          )}
+        </div>
+        <div className={"flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full " + (late ? "bg-red-900 text-red-200" : "bg-[#2a1f16] text-[var(--cream-dim)]")}>
+          <Icon.Clock className="w-3 h-3" />
+          {mins} min
+        </div>
+      </div>
+      <div className="flex flex-col gap-2 mb-3">
+        {order.itens.map((it, idx) => (
+          <div key={idx} className="text-sm" style={{color:"var(--cream)"}}>
+            <div>{it.qtd}x {it.nome}</div>
+            {(it.adicionais && it.adicionais.length > 0) && (
+              <div className="flex flex-wrap gap-1 mt-1">
+                {it.adicionais.map(a => (
+                  <span key={a.id} className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{background:"rgba(74,222,128,0.15)", color:"var(--green)"}}>+ {a.nome}</span>
+                ))}
+              </div>
+            )}
+            {it.obs && (
+              <div className="text-xs font-bold mt-1 px-2 py-1 rounded-lg flex items-start gap-1.5" style={{background:"rgba(211,47,47,0.18)", color:"#ff8a8a"}}>
+                <Icon.Alert className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                <span>{it.obs}</span>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+      {order.contaPedida && order.status !== STATUS.FECHADO && (
+        <div className="flex items-center gap-1.5 text-xs font-bold mb-2 px-2 py-1 rounded-lg w-fit" style={{background:"rgba(255,167,38,0.15)", color:"var(--orange)"}}>
+          <Icon.Receipt className="w-3.5 h-3.5" /> Conta pedida
+        </div>
+      )}
+      {children}
+    </div>
+  );
+}
+
+/* ============================================================
+   MODAL: Conta do cliente — soma todos os pedidos da comanda
+   ============================================================ */
+function BillModal({ comandaId, orders, onClose, onCloseBill, closing }) {
+  const total = orders.reduce((sum, o) => sum + o.itens.reduce((s,i)=>s+cartItemTotal(i),0), 0);
+  const primeiro = orders[0];
+  const cliente = useClienteInfo(primeiro ? primeiro.telefone : null);
+
+  return (
+    <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center bg-black/70 px-4" onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} className="anim-sheet sm:anim-pop w-full sm:max-w-sm leather-tag rounded-2xl p-5 max-h-[80vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="font-display text-xl" style={{color:"var(--cream)"}}>Conta — {primeiro ? primeiro.nome : ""} <span className="text-sm text-[var(--cream-dim)]">#{primeiro ? primeiro.codigo : ""}</span></h3>
+          <button onClick={onClose} className="text-[var(--cream-dim)] focus-ring rounded"><Icon.X className="w-5 h-5"/></button>
+        </div>
+
+        {cliente && cliente.totalVisitas >= 2 && (
+          <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-lg" style={{background:"rgba(211,47,47,0.1)"}}>
+            <Icon.Heart className="w-4 h-4 flex-shrink-0" style={{color:"var(--red)"}} />
+            <span className="text-xs" style={{color:"var(--cream-dim)"}}>
+              Cliente recorrente — {cliente.totalVisitas}ª visita, total histórico {fmtMoney(cliente.totalGasto || 0)}
+            </span>
+          </div>
+        )}
+
+        <div className="flex flex-col gap-3 mb-4">
+          {orders.map(order => (
+            <div key={order.docId} className="border-b border-[#3d2d1d] pb-2">
+              <div className="text-[11px] text-[var(--cream-dim)] mb-1">{formatClock(order.criadoEm)}</div>
+              {order.itens.map((it, idx) => (
+                <div key={idx} className="text-sm mb-1.5" style={{color:"var(--cream)"}}>
+                  <div className="flex justify-between">
+                    <span>{it.qtd}x {it.nome}</span>
+                    <span className="text-[var(--cream-dim)]">{fmtMoney(cartItemTotal(it))}</span>
+                  </div>
+                  {(it.adicionais && it.adicionais.length > 0) && (
+                    <div className="text-[11px] text-[var(--orange)] mt-0.5">
+                      {it.adicionais.map(a => "+ " + a.nome).join(", ")}
+                    </div>
+                  )}
+                  {it.obs && (
+                    <div className="text-[11px] italic text-[var(--cream-dim)] mt-0.5">{it.obs}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+        <div className="flex justify-between items-center mb-4">
+          <span className="font-display text-lg" style={{color:"var(--cream)"}}>Total</span>
+          <span className="font-display text-2xl" style={{color:"var(--green)"}}>{fmtMoney(total)}</span>
+        </div>
+        <p className="text-xs text-[var(--cream-dim)] mb-3">Passe esse valor na máquina e depois encerre a conta. Ao encerrar, o pedido sai da tela ativa e vai pro histórico de vendas.</p>
+        <button onClick={onCloseBill} disabled={closing} className="tap-active transition-fast w-full rounded-xl py-3 font-display disabled:opacity-50" style={{background:"var(--green)", color:"#0a0a0a"}}>
+          {closing ? "Encerrando..." : "Encerrar conta"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   TELA: Garçom — comandas ativas, entrega, contas e gestão
+   ============================================================ */
+function WaiterScreen({ orders, updateOrder, deleteOrder, archiveOrders, now, pushToast }) {
+  const [filter, setFilter] = useState("ativos");
+  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [billView, setBillView] = useState(null);
+  const [closing, setClosing] = useState(false);
+
+  const ativos = orders.filter(o => o.status !== STATUS.FECHADO);
+  const pedindoConta = orders.filter(o => o.contaPedida && o.status !== STATUS.FECHADO);
+  const { history, loading: loadingHistory } = useHistory(filter === "historico");
+
+  const list = filter === "ativos" ? ativos : pedindoConta;
+
+  const setStatus = async (order, status) => {
+    try { await updateOrder(order.docId, { status, atualizadoEm: Date.now() }); }
+    catch (e) { pushToast("Erro ao atualizar pedido.", "error"); }
+  };
+
+  const closeBill = async (comandaId) => {
+    const ordersOfClient = orders.filter(o => o.comandaId === comandaId && o.status !== STATUS.FECHADO);
+    setClosing(true);
+    try {
+      await archiveOrders(ordersOfClient);
+      pushToast("Conta encerrada e movida pro histórico.", "success");
+      setBillView(null);
+    } catch (e) {
+      pushToast("Erro ao encerrar a conta.", "error");
+    } finally {
+      setClosing(false);
+    }
+  };
+
+  const removeOrder = async (order) => {
+    try {
+      await deleteOrder(order.docId);
+      pushToast("Pedido removido.", "success");
+      setConfirmDelete(null);
+    } catch (e) {
+      pushToast("Erro ao excluir pedido.", "error");
+    }
+  };
+
+  return (
+    <div className="min-h-screen pb-6" style={{background:"var(--bg)"}}>
+      <header className="px-4 pt-4 pb-3 flex items-center justify-between sticky top-0 z-30" style={{background:"linear-gradient(180deg, var(--bg) 75%, transparent)"}}>
+        <div className="flex items-center gap-2">
+          <Icon.Bell className="w-5 h-5" style={{color:"var(--orange)"}} />
+          <span className="font-display text-lg" style={{color:"var(--cream)"}}>Garçom</span>
+        </div>
+        <span className="text-xs text-[var(--cream-dim)]">Trilhas do Sertão</span>
+      </header>
+
+      <div className="px-4 flex gap-2 mb-4 overflow-x-auto scrollbar-none">
+        {[
+          { key: "ativos", label: "Ativos (" + ativos.length + ")" },
+          { key: "contas", label: "Pedindo conta (" + pedindoConta.length + ")" },
+          { key: "historico", label: "Histórico de hoje" },
+        ].map(f => (
+          <button key={f.key} onClick={() => setFilter(f.key)}
+            className={"tap-active transition-fast px-4 py-2 rounded-full text-sm font-semibold border whitespace-nowrap focus-ring " + (filter===f.key ? "border-transparent" : "border-[#3d2d1d] text-[var(--cream-dim)]")}
+            style={filter===f.key ? { background: f.key==="contas" ? "var(--orange)" : "var(--green)", color:"#0a0a0a" } : {}}>
+            {f.key === "contas" && pedindoConta.length > 0 && <Icon.Alert className="w-3.5 h-3.5 inline mr-1" />}
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      {filter === "historico" ? (
+        <main className="px-4 flex flex-col gap-3">
+          {loadingHistory && (
+            <p className="text-sm text-[var(--cream-dim)] text-center py-10">Carregando histórico...</p>
+          )}
+          {!loadingHistory && history.length === 0 && (
+            <div className="flex flex-col items-center text-center py-16 gap-2">
+              <CactusMascot className="w-16 h-16" wobble={false} />
+              <p className="text-[var(--cream-dim)] text-sm">Nenhuma conta encerrada hoje ainda.</p>
+            </div>
+          )}
+          {!loadingHistory && history.length > 0 && (
+            <>
+              <div className="leather-tag rounded-2xl p-4 flex justify-between items-center">
+                <span className="text-sm text-[var(--cream-dim)]">Total faturado hoje</span>
+                <span className="font-display text-xl" style={{color:"var(--green)"}}>
+                  {fmtMoney(history.reduce((s,o) => s + o.itens.reduce((s2,i)=>s2+cartItemTotal(i),0), 0))}
+                </span>
+              </div>
+              {history.map(order => (
+                <div key={order.docId} className="leather-tag rounded-2xl p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-display" style={{color:"var(--cream)"}}>{order.nome} <span className="text-xs text-[var(--cream-dim)]">#{order.codigo}</span></span>
+                    <span className="text-xs text-[var(--cream-dim)]">{formatClock(order.fechadoEm)}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    {order.itens.map((it, idx) => (
+                      <div key={idx} className="flex justify-between text-sm" style={{color:"var(--cream-dim)"}}>
+                        <span>{it.qtd}x {it.nome}</span>
+                        <span>{fmtMoney(cartItemTotal(it))}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+        </main>
+      ) : (
+        <main className="px-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {list.length === 0 && (
+            <div className="col-span-full flex flex-col items-center text-center py-16 gap-2">
+              <CactusMascot className="w-16 h-16" wobble={false} />
+              <p className="text-[var(--cream-dim)] text-sm">Nada por aqui agora.</p>
+            </div>
+          )}
+          {list.map(order => (
+            <OrderCard key={order.docId} order={order} now={now}>
+              <div className="flex flex-col gap-2">
+                <div className="flex gap-2">
+                  {order.status === STATUS.RECEBIDO && (
+                    <button onClick={() => setStatus(order, STATUS.PREPARO)}
+                      className="tap-active transition-fast flex-1 rounded-lg py-2 text-xs font-bold flex items-center justify-center gap-1" style={{background:"var(--red)", color:"#fff"}}>
+                      <Icon.Flame className="w-3.5 h-3.5"/> Ir pra brasa
+                    </button>
+                  )}
+                  {order.status === STATUS.PREPARO && (
+                    <button onClick={() => setStatus(order, STATUS.PRONTO)}
+                      className="tap-active transition-fast flex-1 rounded-lg py-2 text-xs font-bold flex items-center justify-center gap-1" style={{background:"var(--green)", color:"#0a0a0a"}}>
+                      <Icon.Check className="w-3.5 h-3.5"/> Marcar pronto
+                    </button>
+                  )}
+                  {order.status === STATUS.PRONTO && (
+                    <button onClick={() => setStatus(order, STATUS.ENTREGUE)}
+                      className="tap-active transition-fast flex-1 rounded-lg py-2 text-xs font-bold flex items-center justify-center gap-1" style={{background:"var(--green)", color:"#0a0a0a"}}>
+                      <Icon.Check className="w-3.5 h-3.5"/> Entregar
+                    </button>
+                  )}
+                  {order.status === STATUS.ENTREGUE && (
+                    <span className="flex-1 text-xs text-center py-2 text-[var(--cream-dim)]">Entregue ✓</span>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => setConfirmDelete(order)} className="tap-active transition-fast flex-1 rounded-lg py-2 text-xs font-semibold flex items-center justify-center gap-1 border border-[#3d2d1d] text-[var(--cream-dim)]">
+                    <Icon.Trash className="w-3.5 h-3.5"/> Excluir
+                  </button>
+                  <button onClick={() => setBillView(order.comandaId)} className="tap-active transition-fast flex-1 rounded-lg py-2 text-xs font-semibold flex items-center justify-center gap-1 border border-[#3d2d1d]" style={{color:"var(--orange)"}}>
+                    <Icon.Receipt className="w-3.5 h-3.5"/> Ver conta
+                  </button>
+                </div>
+              </div>
+            </OrderCard>
+          ))}
+        </main>
+      )}
+
+      {confirmDelete && (
+        <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center bg-black/70 px-4" onClick={() => setConfirmDelete(null)}>
+          <div onClick={e => e.stopPropagation()} className="anim-sheet sm:anim-pop w-full sm:max-w-sm leather-tag rounded-2xl p-5">
+            <h3 className="font-display text-lg mb-1" style={{color:"var(--cream)"}}>Excluir pedido de {confirmDelete.nome}?</h3>
+            <p className="text-sm text-[var(--cream-dim)] mb-4">Essa ação não pode ser desfeita.</p>
+            <div className="flex gap-2">
+              <button onClick={() => setConfirmDelete(null)} className="tap-active transition-fast flex-1 rounded-xl py-2.5 font-semibold border border-[#3d2d1d] text-[var(--cream-dim)]">Cancelar</button>
+              <button onClick={() => removeOrder(confirmDelete)} className="tap-active transition-fast flex-1 rounded-xl py-2.5 font-semibold" style={{background:"var(--red)", color:"#fff"}}>Excluir</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {billView && (
+        <BillModal
+          comandaId={billView}
+          orders={orders.filter(o => o.comandaId === billView && o.status !== STATUS.FECHADO)}
+          onClose={() => setBillView(null)}
+          onCloseBill={() => closeBill(billView)}
+          closing={closing}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   APP RAIZ
+   ============================================================ */
+function App() {
+  const [authed, setAuthed] = useState(false);
+  const [now, setNow] = useState(Date.now());
+  const { orders, connected, error, updateOrder, deleteOrder, archiveOrders } = useOrders();
+  const { toasts, push, dismiss } = useToasts();
+
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 15000);
+    return () => clearInterval(t);
+  }, []);
+
+  useEffect(() => {
+    if (error) push("Erro de conexão (" + error + "). Verifique as regras do Firestore.", "error");
+  }, [error]);
+
+  const knownIds = useRef(new Set());
+  useEffect(() => {
+    if (!authed) { knownIds.current = new Set(orders.map(o=>o.docId)); return; }
+    const currentIds = new Set(orders.map(o => o.docId));
+    let isNew = false;
+    currentIds.forEach(id => { if (!knownIds.current.has(id)) isNew = true; });
+    if (knownIds.current.size > 0 && isNew) {
+      playBeep(2);
+      push("Novo pedido recebido!", "info");
+    }
+    knownIds.current = currentIds;
+  }, [orders, authed]);
+
+  if (!authed) {
+    return <PasswordGate onSuccess={() => setAuthed(true)} />;
+  }
+
+  return (
+    <>
+      <ToastStack toasts={toasts} dismiss={dismiss} />
+      {!connected && !error && (
+        <div className="fixed bottom-2 left-1/2 -translate-x-1/2 z-[100] text-[10px] text-neutral-500 bg-black/60 px-3 py-1 rounded-full">
+          conectando...
+        </div>
+      )}
+      <WaiterScreen orders={orders} updateOrder={updateOrder} deleteOrder={deleteOrder} archiveOrders={archiveOrders} now={now} pushToast={push} />
+    </>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
+</script>
+
+</body>
+</html>
