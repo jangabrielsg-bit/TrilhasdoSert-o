@@ -196,13 +196,13 @@ function formatClock(ts){
 }
 
 /* ============================================================
-   MASCOTE e logo (versão compacta — só usados na marca do header)
+   LOGO: imagem oficial (logo.png)
    ============================================================ */
 function LogoMark({ size = "text-3xl" }) {
+  const heightClass = size === "text-xl" ? "h-9" : size === "text-2xl" ? "h-11" : "h-14";
   return (
     <div className="flex flex-col items-center select-none">
-      <div className={"font-display brand-burn " + size} style={{color:"var(--green)"}}>Trilhas do Sertão</div>
-      <div className="font-display text-sm -mt-1" style={{color:"var(--orange)"}}>★ Burger ★</div>
+      <img src="logo.png" alt="Trilhas do Sertão Burger" draggable="false" className={heightClass + " w-auto"} />
     </div>
   );
 }
