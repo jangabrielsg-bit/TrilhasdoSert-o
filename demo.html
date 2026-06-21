@@ -205,41 +205,29 @@
   }
   .number-label { font-size: 14px; color: var(--dim); margin-top: 10px; line-height: 1.45; }
 
-  /* ── CTA FINAL ── */
-  .cta-section {
-    padding: 100px 24px; text-align: center;
-    background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(212,130,26,0.1) 0%, transparent 70%);
+  /* roadmap */
+  .roadmap { padding: 80px 24px; max-width: 900px; margin: 0 auto; }
+  .roadmap-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px; margin-top: 48px;
   }
-  .mascote-cta { height: 120px; margin-bottom: 28px;
-    filter: drop-shadow(0 8px 32px rgba(0,0,0,0.5));
-    animation: wobble 3s ease-in-out infinite;
+  .roadmap-card {
+    background: var(--brown); border-radius: 20px;
+    border: 1px solid rgba(212,130,26,0.12);
+    padding: 28px 24px;
+    transition: transform .2s, box-shadow .2s, border-color .2s;
   }
-  @keyframes wobble { 0%,100%{transform:rotate(-3deg)} 50%{transform:rotate(3deg)} }
-  .cta-section h2 {
-    font-family: 'Playfair Display', Georgia, serif;
-    font-size: clamp(28px, 5vw, 52px); font-weight: 900;
-    margin-bottom: 18px;
+  .roadmap-card:hover { transform: translateY(-4px); box-shadow: 0 16px 48px rgba(0,0,0,0.4); border-color: rgba(212,130,26,0.3); }
+  .roadmap-icon { font-size: 32px; margin-bottom: 14px; }
+  .roadmap-tag {
+    display: inline-block; font-size: 11px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 20px; margin-bottom: 12px;
   }
-  .cta-section h2 em { color: var(--amberL); font-style: normal; }
-  .cta-section p { font-size: 18px; color: var(--dim); margin-bottom: 44px; max-width: 500px; margin-left: auto; margin-right: auto; }
-
-  .cta-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
-  .btn-primary {
-    display: inline-flex; align-items: center; gap: 10px;
-    background: var(--green); color: #fff;
-    font-size: 17px; font-weight: 700; padding: 18px 40px; border-radius: 50px;
-    text-decoration: none; box-shadow: 0 6px 28px rgba(61,112,53,0.4);
-    transition: transform .2s, box-shadow .2s;
-  }
-  .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(61,112,53,0.5); }
-  .btn-secondary {
-    display: inline-flex; align-items: center; gap: 10px;
-    background: transparent; color: var(--amber);
-    font-size: 17px; font-weight: 600; padding: 18px 40px; border-radius: 50px;
-    text-decoration: none; border: 2px solid var(--amber);
-    transition: background .2s, color .2s;
-  }
-  .btn-secondary:hover { background: var(--amber); color: #000; }
+  .tag-soon { background: rgba(212,130,26,0.18); color: var(--amberL); }
+  .tag-future { background: rgba(61,112,53,0.18); color: var(--greenL); }
+  .roadmap-card h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 20px; font-weight: 700; color: var(--cream); margin-bottom: 8px; }
+  .roadmap-card p { font-size: 14px; color: var(--dim); line-height: 1.6; }
 
   .footer {
     background: #080604; padding: 28px 24px; text-align: center;
@@ -285,7 +273,7 @@
 <!-- HERO -->
 <section class="hero">
   <img class="hero-logo" src="logo.png" alt="Trilhas do Sertão Burger">
-  <h1>Sistema de Gestão<br><em>feito para o</em> <span>Trilhas</span></h1>
+  <h1>Sistema de Pedidos<br><em>e Acompanhamento</em> <span>Trilhas</span></h1>
   <p>Cardápio digital, pedidos em tempo real e controle total do negócio — tudo no celular, sem instalar nada.</p>
   <a href="#demo" class="hero-cta">🌵 Ver o sistema em ação</a>
   <div class="scroll-hint">Rolar para ver</div>
@@ -548,15 +536,56 @@
   </div>
 </section>
 
-<!-- CTA FINAL -->
-<section class="cta-section">
-  <img class="mascote-cta" src="mascote.png" alt="Mascote">
-  <h2>Bora crescer <em>juntos?</em> 🌵</h2>
-  <p>O sistema já está funcionando. Com suporte mensal, ele melhora todo mês junto com o Trilhas.</p>
-  <div class="cta-buttons">
-    <a href="https://wa.me/5500000000000" class="btn-primary">💬 Falar pelo WhatsApp</a>
-    <a href="mailto:jangabrielsg@gmail.com" class="btn-secondary">📧 Enviar e-mail</a>
+<!-- ROADMAP -->
+<section class="roadmap">
+  <div class="section-label">O que vem por aí</div>
+  <h2 class="section-title">Novidades e <em>possibilidades</em></h2>
+  <div class="roadmap-grid">
+    <div class="roadmap-card">
+      <div class="roadmap-icon">📲</div>
+      <span class="roadmap-tag tag-soon">Em breve</span>
+      <h3>Notificações push</h3>
+      <p>O cliente recebe um aviso no celular quando o pedido fica pronto — sem precisar ficar olhando a tela.</p>
+    </div>
+    <div class="roadmap-card">
+      <div class="roadmap-icon">🎁</div>
+      <span class="roadmap-tag tag-soon">Em breve</span>
+      <h3>Programa de fidelidade</h3>
+      <p>Acúmulo de pontos a cada pedido. O cliente troca por descontos ou itens do cardápio.</p>
+    </div>
+    <div class="roadmap-card">
+      <div class="roadmap-icon">💳</div>
+      <span class="roadmap-tag tag-soon">Em breve</span>
+      <h3>Pagamento integrado</h3>
+      <p>PIX e cartão direto pelo app, com comprovante automático e fechamento de caixa no gerencial.</p>
+    </div>
+    <div class="roadmap-card">
+      <div class="roadmap-icon">🤖</div>
+      <span class="roadmap-tag tag-future">Futuro</span>
+      <h3>Sugestão inteligente</h3>
+      <p>O sistema aprende o que cada cliente costuma pedir e sugere combinações no cardápio.</p>
+    </div>
+    <div class="roadmap-card">
+      <div class="roadmap-icon">📦</div>
+      <span class="roadmap-tag tag-future">Futuro</span>
+      <h3>Controle de estoque</h3>
+      <p>Ingredientes baixam automaticamente a cada pedido. Alerta quando um item está acabando.</p>
+    </div>
+    <div class="roadmap-card">
+      <div class="roadmap-icon">🛵</div>
+      <span class="roadmap-tag tag-future">Futuro</span>
+      <h3>Delivery próprio</h3>
+      <p>Pedidos para entrega com rastreamento em tempo real, sem depender de aplicativos de terceiros.</p>
+    </div>
   </div>
+</section>
+
+<section style="padding: 60px 24px; text-align: center; background: var(--brown); border-top: 1px solid rgba(212,130,26,0.12);">
+  <p style="font-size:16px; color:var(--dim); margin-bottom: 24px;">Quer saber mais ou tem alguma dúvida?</p>
+  <a href="https://wa.me/5585997711633" target="_blank" style="display:inline-flex; align-items:center; gap:12px; background:#25D366; color:#fff; font-size:18px; font-weight:700; padding:18px 44px; border-radius:50px; text-decoration:none; box-shadow:0 8px 32px rgba(37,211,102,0.35); transition:transform .2s, box-shadow .2s;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 14px 40px rgba(37,211,102,0.5)'" onmouseout="this.style.transform='';this.style.boxShadow='0 8px 32px rgba(37,211,102,0.35)'">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    Falar pelo WhatsApp
+  </a>
 </section>
 
 <footer class="footer">
