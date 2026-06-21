@@ -108,64 +108,72 @@
   .transition-med{ transition: all 0.25s cubic-bezier(.3,.7,.4,1); }
 
   @keyframes cactusJump{
-    0%{ transform: translateY(0) rotate(-2deg) scale(1); }
-    30%{ transform: translateY(-32px) rotate(4deg) scale(1.08); }
-    55%{ transform: translateY(-14px) rotate(-3deg) scale(1.04); }
-    75%{ transform: translateY(-4px) rotate(1deg) scale(1.01); }
-    100%{ transform: translateY(0) rotate(-2deg) scale(1); }
+    0%  { transform: translateY(0)    rotate(-3deg) scale(1,1); }
+    20% { transform: translateY(0)    rotate(-3deg) scale(1.15,0.75); }
+    45% { transform: translateY(-60px) rotate(10deg) scale(0.9,1.15); }
+    65% { transform: translateY(-28px) rotate(-6deg) scale(1,1); }
+    80% { transform: translateY(-8px)  rotate(3deg) scale(1.05,0.95); }
+    92% { transform: translateY(0)    rotate(-1deg) scale(1,1.04); }
+    100%{ transform: translateY(0)    rotate(0deg)  scale(1,1); }
   }
   @keyframes cactusSpin{
-    0%{ transform: rotate(0deg) scale(1); }
-    40%{ transform: rotate(200deg) scale(1.12); }
+    0%  { transform: rotate(0deg)   scale(1); }
+    30% { transform: rotate(220deg) scale(1.2); }
+    70% { transform: rotate(340deg) scale(1.05); }
     100%{ transform: rotate(360deg) scale(1); }
   }
   @keyframes cactusShake{
-    0%,100%{ transform: translateX(0) rotate(-2deg); }
-    15%{ transform: translateX(-10px) rotate(-6deg); }
-    35%{ transform: translateX(10px) rotate(6deg); }
-    55%{ transform: translateX(-7px) rotate(-4deg); }
-    75%{ transform: translateX(7px) rotate(4deg); }
-    90%{ transform: translateX(-3px) rotate(-2deg); }
+    0%,100%{ transform: translateX(0)    rotate(0deg); }
+    10%    { transform: translateX(-18px) rotate(-12deg); }
+    25%    { transform: translateX(18px)  rotate(12deg); }
+    40%    { transform: translateX(-14px) rotate(-8deg); }
+    55%    { transform: translateX(14px)  rotate(8deg); }
+    70%    { transform: translateX(-8px)  rotate(-4deg); }
+    85%    { transform: translateX(8px)   rotate(4deg); }
   }
   @keyframes cactusDance{
-    0%{ transform: rotate(-8deg) scale(1); }
-    20%{ transform: rotate(8deg) scale(1.05) translateY(-6px); }
-    40%{ transform: rotate(-6deg) scale(1) translateY(0); }
-    60%{ transform: rotate(6deg) scale(1.05) translateY(-6px); }
-    80%{ transform: rotate(-4deg) scale(1) translateY(0); }
-    100%{ transform: rotate(-2deg) scale(1); }
+    0%  { transform: rotate(-14deg) scale(1)    translateY(0); }
+    15% { transform: rotate(14deg)  scale(1.12) translateY(-18px); }
+    30% { transform: rotate(-10deg) scale(0.95) translateY(0); }
+    45% { transform: rotate(10deg)  scale(1.12) translateY(-18px); }
+    60% { transform: rotate(-8deg)  scale(0.95) translateY(0); }
+    75% { transform: rotate(6deg)   scale(1.06) translateY(-8px); }
+    100%{ transform: rotate(0deg)   scale(1)    translateY(0); }
   }
   @keyframes cactusSquish{
-    0%{ transform: scale(1,1); }
-    25%{ transform: scale(1.3,0.7); }
-    50%{ transform: scale(0.85,1.2); }
-    75%{ transform: scale(1.1,0.9); }
+    0%  { transform: scale(1,1); }
+    20% { transform: scale(1.5,0.6); }
+    45% { transform: scale(0.75,1.4); }
+    65% { transform: scale(1.25,0.85); }
+    80% { transform: scale(0.95,1.1); }
     100%{ transform: scale(1,1); }
   }
   @keyframes bubblePop{
-    0%{ opacity:0; transform: scale(0.7) translateY(6px); }
-    60%{ opacity:1; transform: scale(1.05) translateY(-2px); }
-    100%{ opacity:1; transform: scale(1) translateY(0); }
+    0%  { opacity:0; transform: translateX(-50%) scale(0.6) translateY(10px); }
+    60% { opacity:1; transform: translateX(-50%) scale(1.06) translateY(-3px); }
+    100%{ opacity:1; transform: translateX(-50%) scale(1) translateY(0); }
   }
   @keyframes bubbleFade{
-    0%{ opacity:1; }
-    70%{ opacity:1; }
+    0%  { opacity:1; }
+    65% { opacity:1; }
     100%{ opacity:0; }
   }
   .mascot-bubble{
-    position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%);
-    background:var(--leather); border:1px solid rgba(201,194,179,0.18);
-    color:var(--cream); font-size:13px; line-height:1.4; white-space:nowrap;
-    padding:8px 14px; border-radius:14px; pointer-events:none; z-index:10;
-    animation: bubblePop 0.3s cubic-bezier(.3,1.6,.5,1) both, bubbleFade 2.5s ease-in 0.4s both;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    position:absolute; bottom:calc(100% + 10px); left:50%;
+    transform:translateX(-50%);
+    background:var(--leather); border:1.5px solid rgba(201,194,179,0.25);
+    color:var(--cream); font-size:15px; font-weight:600; line-height:1.45;
+    text-align:center; white-space:normal; width:max-content; max-width:220px;
+    padding:10px 16px; border-radius:16px; pointer-events:none; z-index:50;
+    animation: bubblePop 0.35s cubic-bezier(.3,1.6,.5,1) both, bubbleFade 3.2s ease-in 0.5s both;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.55);
   }
   .mascot-bubble::after{
     content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%);
-    border:6px solid transparent; border-top-color:var(--leather);
+    border:8px solid transparent; border-top-color:var(--leather);
   }
   .cactus-interactive{ cursor:pointer; position:relative; display:inline-block; }
-  .cactus-interactive:active img{ filter: brightness(1.15); }
+  .cactus-interactive:active img{ filter: brightness(1.2) drop-shadow(0 0 8px var(--green)); }
 
   @media (prefers-reduced-motion: reduce){
     .anim-stamp, .anim-rise, .anim-pop, .wobble, .anim-sheet{ animation: none !important; }
@@ -284,11 +292,32 @@ function makeCartKey(itemId, adicionais, obs) {
    MASCOTE: imagem oficial do cacto sertanejo (mascote.png)
    ============================================================ */
 const CACTUS_ANIMS = ["cactusJump","cactusSpin","cactusShake","cactusDance","cactusSquish"];
-const CACTUS_MSGS = [
-  "Ô de casa! 🌵","Oxe, que delícia!","Vai pedir logo, sô!","Tô aqui, meu chapa!",
-  "Vixe, que fome!","Arretado demais!","Misericórdia, bora!","Sertão manda salve! 🤠",
-  "Bão demais da conta!","Tô na torcida por tu!","Aproveita, cabra!","Uai, tô aqui!",
+const CACTUS_MSGS_IDLE = [
+  "Tô aqui esperando seu pedido! 🌵",
+  "Oxe, que fome você tá passando! 😄",
+  "Vai logo, cabra! O lanche tá te chamando! 🍔",
+  "Escolhe um, não tenha dó! 🤠",
+  "Aqui tem coisa boa demais, bora pedir!",
+  "Cutuquei um cacto e apareci! Faz seu pedido! 🌵",
+  "O garçom tá na prontidão te esperando!",
+  "Misericórdia, vai logo pedir, sô! 😂",
+  "Tô com fome só de olhar o cardápio! 🤤",
+  "Não deixa o lanche esperando, não! 🔥",
 ];
+const CACTUS_MSGS_CHOICE = [
+  "Oxe, que escolha arretada! 🔥",
+  "Acertou em cheio, meu chapa! 👊",
+  "Isso aí! Bão demais da conta! 🌵",
+  "Boa pedida! Vai gostar demais! 😋",
+  "Vixe, você tem bom gosto! 🤠",
+  "Tá com tudo! Continua assim! 🎉",
+  "Acertou na mosca, cabra! ✅",
+  "Arretado! Essa é das boa! 🔥",
+  "Misericórdia, que pedido bom! 😍",
+  "Esse é o favorito da galera! 🏆",
+];
+function randFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
 function CactusMascot({ className = "w-32 h-32", wobble = true, interactive = false }) {
   const [anim, setAnim] = React.useState(null);
   const [msg, setMsg] = React.useState(null);
@@ -296,45 +325,41 @@ function CactusMascot({ className = "w-32 h-32", wobble = true, interactive = fa
   const timerRef = React.useRef(null);
   const idxRef = React.useRef(0);
 
-  const triggerInteraction = React.useCallback(() => {
+  const trigger = React.useCallback((msgPool) => {
     if (timerRef.current) clearTimeout(timerRef.current);
     const a = CACTUS_ANIMS[idxRef.current % CACTUS_ANIMS.length];
-    const m = CACTUS_MSGS[Math.floor(Math.random() * CACTUS_MSGS.length)];
     idxRef.current++;
     setAnim(null);
-    setTimeout(() => setAnim(a), 10);
-    setMsg(m);
+    requestAnimationFrame(() => requestAnimationFrame(() => setAnim(a)));
+    setMsg(randFrom(msgPool));
     setMsgKey(k => k + 1);
-    timerRef.current = setTimeout(() => { setAnim(null); setMsg(null); }, 2900);
+    timerRef.current = setTimeout(() => { setAnim(null); setMsg(null); }, 3800);
   }, []);
 
   React.useEffect(() => {
     if (!interactive) return;
-    const handler = () => triggerInteraction();
+    const handler = () => trigger(CACTUS_MSGS_CHOICE);
     window.addEventListener("cactus-react", handler);
     return () => window.removeEventListener("cactus-react", handler);
-  }, [interactive, triggerInteraction]);
+  }, [interactive, trigger]);
 
-  const baseAnim = anim
-    ? { animation: `${anim} 0.65s cubic-bezier(.3,1.2,.4,1) both` }
-    : wobble && !anim ? undefined : undefined;
+  const animStyle = anim ? { animation:`${anim} 0.9s cubic-bezier(.3,1.2,.4,1) both` } : {};
   const imgClass = anim ? className : (wobble ? "wobble " + className : className);
 
   if (!interactive) {
     return (
       <img src="mascote.png" alt="Mascote Trilhas do Sertão" draggable="false"
-        className={imgClass} style={{ objectFit:"contain", ...(anim ? { animation:`${anim} 0.65s cubic-bezier(.3,1.2,.4,1) both` } : {}) }} />
+        className={imgClass} style={{ objectFit:"contain", ...animStyle }} />
     );
   }
 
   return (
-    <div className="cactus-interactive" onClick={triggerInteraction} role="button" aria-label="Interagir com o mascote">
-      {msg && (
-        <div key={msgKey} className="mascot-bubble">{msg}</div>
-      )}
+    <div className="cactus-interactive" onClick={() => trigger(CACTUS_MSGS_IDLE)}
+      role="button" aria-label="Interagir com o mascote">
+      {msg && <div key={msgKey} className="mascot-bubble">{msg}</div>}
       <img src="mascote.png" alt="Mascote Trilhas do Sertão" draggable="false"
-        className={anim ? className : (wobble ? "wobble " + className : className)}
-        style={{ objectFit:"contain", display:"block", ...(anim ? { animation:`${anim} 0.65s cubic-bezier(.3,1.2,.4,1) both` } : {}) }}
+        className={imgClass}
+        style={{ objectFit:"contain", display:"block", ...animStyle }}
       />
     </div>
   );
