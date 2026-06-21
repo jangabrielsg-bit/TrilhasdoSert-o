@@ -163,6 +163,7 @@ try {
 }
 
 const MENU_COL = "cardapio";
+const HISTORY_COL = "historico_vendas";
 const ORDERS_COL = "pedidos";
 const CLIENTES_COL = "clientes";
 const AVALIACOES_COL = "avaliacoes";
@@ -313,7 +314,7 @@ function NameGate({ onSubmit }) {
     e.preventDefault();
     const trimmed = nome.trim();
     if (trimmed.length < 2) return;
-    onSubmit(trimmed, normalizePhone(telefone));
+    onSubmit(trimmed, normalizePhone(telefone), welcomeBack);
   };
 
   return (
@@ -469,14 +470,26 @@ function useClienteRecorrente() {
     }
   }, []);
 
-  // Registra/atualiza o cliente no CRM mínimo. Chamado ao confirmar pedido.
-  const registrarVisita = useCallback(async (telefoneRaw, nome, valorPedido) => {
+  // Registra/atualiza o cliente no CRM mínimo, incluindo a contagem de
+  // quantas vezes pediu cada item — base para a sugestão "o de sempre".
+  const registrarVisita = useCallback(async (telefoneRaw, nome, valorPedido, itensPedidos) => {
     const telefone = normalizePhone(telefoneRaw);
     if (!db || !telefone) return;
     const ref = db.collection(CLIENTES_COL).doc(telefone);
     try {
       const doc = await ref.get();
       const now = Date.now();
+      const contagemAtual = (doc.exists && doc.data().contagemItens) ? doc.data().contagemItens : {};
+      const novaContagem = { ...contagemAtual };
+      (itensPedidos || []).forEach(it => {
+        novaContagem[it.id] = (novaContagem[it.id] || 0) + it.qtd;
+      });
+      // item mais pedido até agora, pra exibir como "o de sempre"
+      let itemFavoritoId = null, maxQtd = 0;
+      Object.keys(novaContagem).forEach(id => {
+        if (novaContagem[id] > maxQtd) { maxQtd = novaContagem[id]; itemFavoritoId = id; }
+      });
+
       if (doc.exists) {
         const data = doc.data();
         const nomes = new Set(data.nomes || []);
@@ -486,11 +499,14 @@ function useClienteRecorrente() {
           totalVisitas: (data.totalVisitas || 0) + 1,
           totalGasto: (data.totalGasto || 0) + valorPedido,
           ultimaVisita: now,
+          contagemItens: novaContagem,
+          itemFavoritoId,
         });
       } else {
         await ref.set({
           telefone, nomes: [nome], totalVisitas: 1, totalGasto: valorPedido,
-          primeiraVisita: now, ultimaVisita: now, itemFavorito: null,
+          primeiraVisita: now, ultimaVisita: now,
+          contagemItens: novaContagem, itemFavoritoId,
         });
       }
     } catch (e) {
@@ -722,7 +738,130 @@ function ItemCustomizeModal({ item, addOns, onClose, onConfirm }) {
 /* ============================================================
    TELA: Cardápio do cliente
    ============================================================ */
-function MenuScreen({ nome, cart, setCart, menuData, onGoCart, onGoTab }) {
+/* ============================================================
+   COMPONENTE: "O de sempre" ou "Inovar" — sugestão personalizada
+   para cliente recorrente com item favorito conhecido.
+   ============================================================ */
+function findItemById(menu, id) {
+  for (const cat of Object.keys(menu)) {
+    const found = (menu[cat] || []).find(i => i.id === id);
+    if (found) return { item: found, categoria: cat };
+  }
+  return null;
+}
+
+function pickInnovationSuggestion(menu, categoriaAtual, excludeId) {
+  // Escolhe um item de uma categoria diferente da do favorito, para
+  // realmente representar uma "novidade" em vez de uma variação óbvia.
+  const candidatas = Object.keys(menu).filter(cat => cat !== categoriaAtual && cat !== "Adicionais" && cat !== "Bebidas");
+  const pool = candidatas.length > 0 ? candidatas : Object.keys(menu);
+  const itensPool = pool.flatMap(cat => menu[cat] || []).filter(i => i.id !== excludeId);
+  if (itensPool.length === 0) return null;
+  return itensPool[Math.floor(Math.random() * itensPool.length)];
+}
+
+function RepeatOrInnovateCard({ menu, clienteInfo, onQuickAdd, onOpenCustomize }) {
+  const [dismissed, setDismissed] = useState(false);
+  const [choice, setChoice] = useState(null); // null | 'repeat' | 'innovate'
+
+  const favoritoData = (clienteInfo && clienteInfo.itemFavoritoId) ? findItemById(menu, clienteInfo.itemFavoritoId) : null;
+  const favorito = favoritoData ? favoritoData.item : null;
+  const categoriaFavorito = favoritoData ? favoritoData.categoria : null;
+
+  const sugestaoInovacao = useMemo(
+    () => favorito ? pickInnovationSuggestion(menu, categoriaFavorito, favorito.id) : null,
+    [menu, categoriaFavorito, favorito]
+  );
+
+  if (!clienteInfo || !clienteInfo.itemFavoritoId || dismissed || !favoritoData) return null;
+
+  const handleRepeat = () => {
+    const customizable = CUSTOMIZABLE_CATEGORIES.has(categoriaFavorito);
+    if (customizable) onOpenCustomize(favorito);
+    else onQuickAdd(favorito);
+    setChoice('repeat');
+  };
+
+  const handleInnovate = () => {
+    if (!sugestaoInovacao) return;
+    setChoice('innovate');
+  };
+
+  if (choice === 'repeat') {
+    return (
+      <div className="leather-tag rounded-2xl p-4 mb-3 anim-pop flex items-center gap-2">
+        <Icon.Check className="w-4 h-4 flex-shrink-0" style={{color:"var(--green)"}} />
+        <p className="text-sm" style={{color:"var(--cream)"}}>Boa escolha! Adicionamos o {favorito.nome} de sempre 🌵</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="leather-tag rounded-2xl p-4 mb-3 anim-rise">
+      <div className="flex justify-between items-start mb-3">
+        <div className="flex items-center gap-2">
+          <Icon.Heart className="w-4 h-4" style={{color:"var(--red)"}} />
+          <h3 className="font-display text-base" style={{color:"var(--cream)"}}>
+            {choice === 'innovate' ? "Topa inovar hoje?" : "Bora de novo ou inovar?"}
+          </h3>
+        </div>
+        <button onClick={() => setDismissed(true)} className="text-[var(--cream-dim)] focus-ring rounded flex-shrink-0">
+          <Icon.X className="w-4 h-4" />
+        </button>
+      </div>
+
+      {choice !== 'innovate' ? (
+        <div className="flex flex-col gap-2">
+          <button onClick={handleRepeat}
+            className="tap-active transition-fast flex items-center justify-between gap-3 rounded-xl px-3.5 py-3 border border-transparent text-left"
+            style={{background:"rgba(74,222,128,0.12)"}}>
+            <div>
+              <div className="text-xs text-[var(--cream-dim)] mb-0.5">O de sempre</div>
+              <div className="font-display text-base" style={{color:"var(--green)"}}>{favorito.nome}</div>
+            </div>
+            <span className="text-xs font-bold px-3 py-1.5 rounded-full flex-shrink-0" style={{background:"var(--green)", color:"#0a0a0a"}}>Repetir</span>
+          </button>
+
+          {sugestaoInovacao && (
+            <button onClick={handleInnovate}
+              className="tap-active transition-fast flex items-center justify-between gap-3 rounded-xl px-3.5 py-3 border border-[#3d2d1d] text-left">
+              <div>
+                <div className="text-xs text-[var(--cream-dim)] mb-0.5">Hoje quero inovar</div>
+                <div className="font-display text-base" style={{color:"var(--orange)"}}>Surpreenda-me</div>
+              </div>
+              <span className="text-xs font-bold px-3 py-1.5 rounded-full flex-shrink-0 border border-[#3d2d1d]" style={{color:"var(--orange)"}}>Ver sugestão</span>
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="anim-pop">
+          <div className="flex items-center justify-between gap-3 rounded-xl px-3.5 py-3 mb-2" style={{background:"rgba(255,167,38,0.1)"}}>
+            <div>
+              <div className="text-xs text-[var(--cream-dim)] mb-0.5">{sugestaoInovacao.categoria || "Sugestão diferente do seu costume"}</div>
+              <div className="font-display text-base" style={{color:"var(--orange)"}}>{sugestaoInovacao.nome}</div>
+              {sugestaoInovacao.desc && <div className="text-xs text-[var(--cream-dim)] mt-1">{sugestaoInovacao.desc}</div>}
+            </div>
+            <span className="font-bold text-sm flex-shrink-0" style={{color:"var(--green)"}}>{fmtMoney(sugestaoInovacao.preco)}</span>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => setChoice(null)} className="tap-active transition-fast flex-1 rounded-lg py-2 text-xs font-semibold border border-[#3d2d1d] text-[var(--cream-dim)]">
+              Voltar
+            </button>
+            <button onClick={() => {
+                const customizable = CUSTOMIZABLE_CATEGORIES.has(sugestaoInovacao.categoria);
+                if (customizable) onOpenCustomize(sugestaoInovacao); else onQuickAdd(sugestaoInovacao);
+              }}
+              className="tap-active transition-fast flex-1 rounded-lg py-2 text-xs font-bold" style={{background:"var(--orange)", color:"#0a0a0a"}}>
+              Adicionar essa
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MenuScreen({ nome, cart, setCart, menuData, clienteInfo, onGoCart, onGoTab }) {
   const { menu, categories, addOns, loading } = menuData;
   const [activeCat, setActiveCat] = useState(null);
   const [customizing, setCustomizing] = useState(null);
@@ -807,6 +946,7 @@ function MenuScreen({ nome, cart, setCart, menuData, onGoCart, onGoTab }) {
       </header>
 
       <main className="px-4 pt-2 flex flex-col gap-3">
+        <RepeatOrInnovateCard menu={menu} clienteInfo={clienteInfo} onQuickAdd={quickAdd} onOpenCustomize={setCustomizing} />
         {(menu[activeCat] || []).map(item => (
           <MenuItemCard key={item.id} item={item} category={activeCat} qtyInCart={cartQty(item.id)} onOpenCustomize={setCustomizing} onQuickAdd={quickAdd} onQuickRemove={quickRemove} />
         ))}
@@ -948,14 +1088,23 @@ function FeedbackModal({ comandaId, nome, telefone, onClose, onSubmitted, pushTo
   const submit = async () => {
     setSending(true);
     try {
-      await db.collection(AVALIACOES_COL).add({
+      const payload = {
         comandaId, nome, telefone: telefone || null,
         nps, csat, comentario: comentario.trim(),
         criadoEm: Date.now(),
-      });
+      };
+      // Timeout de segurança: se a conexão demorar mais que 10s (rede instável,
+      // bloqueio de firewall/extensão), avisa em vez de travar em "Enviando..."
+      // para sempre sem nenhum retorno ao cliente.
+      const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 10000));
+      await Promise.race([db.collection(AVALIACOES_COL).add(payload), timeout]);
       onSubmitted();
     } catch (e) {
-      pushToast("Não consegui enviar sua avaliação agora.", "error");
+      console.error("Erro ao enviar avaliação:", e);
+      const msg = (e && e.message === "timeout")
+        ? "A conexão está lenta e não consegui confirmar o envio. Tenta de novo em alguns segundos."
+        : "Não consegui enviar sua avaliação agora.";
+      pushToast(msg, "error");
     } finally {
       setSending(false);
     }
@@ -1037,9 +1186,13 @@ function FeedbackModal({ comandaId, nome, telefone, onClose, onSubmitted, pushTo
    ============================================================ */
 function TabScreen({ nome, codigo, telefone, myOrders, onBack, onAddMore, onRequestBill, requestingBill, pushToast }) {
   const [showFeedback, setShowFeedback] = useState(false);
-  const [feedbackDone, setFeedbackDone] = useState(false);
+  const [feedbackDone, setFeedbackDone] = useState(() => sessionStorage.getItem("trilhas_feedback_" + codigo) === "1");
   const total = myOrders.reduce((sum, o) => sum + o.itens.reduce((s, i) => s + cartItemTotal(i), 0), 0);
   const aberta = myOrders.some(o => o.status !== STATUS.FECHADO);
+  // A avaliação fica disponível assim que pelo menos um pedido chegou na mesa
+  // (Entregue ou Fechado) — não precisa esperar o garçom encerrar a conta
+  // no sistema, já que a experiência do cliente já aconteceu nesse ponto.
+  const jaEntregueAlgumPedido = myOrders.some(o => o.status === STATUS.ENTREGUE || o.status === STATUS.FECHADO);
   const comandaId = nome + "#" + codigo;
 
   return (
@@ -1107,13 +1260,13 @@ function TabScreen({ nome, codigo, telefone, myOrders, onBack, onAddMore, onRequ
             </button>
           )}
 
-          {!aberta && !feedbackDone && (
+          {jaEntregueAlgumPedido && !feedbackDone && (
             <button onClick={() => setShowFeedback(true)} className="tap-active transition-fast w-full rounded-xl py-3.5 font-display flex items-center justify-center gap-2 anim-pop" style={{background:"var(--orange)", color:"#0a0a0a"}}>
               <Icon.Star className="w-4 h-4" /> Avaliar minha experiência
             </button>
           )}
 
-          {!aberta && feedbackDone && (
+          {jaEntregueAlgumPedido && feedbackDone && (
             <div className="text-center py-3 anim-pop">
               <p className="text-sm" style={{color:"var(--green)"}}>Valeu pelo feedback, {nome.split(' ')[0]}! 🌵</p>
             </div>
@@ -1142,7 +1295,7 @@ function TabScreen({ nome, codigo, telefone, myOrders, onBack, onAddMore, onRequ
         <FeedbackModal
           comandaId={comandaId} nome={nome} telefone={telefone}
           onClose={() => setShowFeedback(false)}
-          onSubmitted={() => { setShowFeedback(false); setFeedbackDone(true); pushToast("Obrigado pela avaliação!", "success"); }}
+          onSubmitted={() => { setShowFeedback(false); setFeedbackDone(true); sessionStorage.setItem("trilhas_feedback_" + codigo, "1"); pushToast("Obrigado pela avaliação!", "success"); }}
           pushToast={pushToast}
         />
       )}
@@ -1158,6 +1311,7 @@ function App() {
   const [nome, setNome] = useState(() => sessionStorage.getItem("trilhas_nome") || "");
   const [codigo, setCodigo] = useState(() => sessionStorage.getItem("trilhas_codigo") || "");
   const [telefone, setTelefone] = useState(() => sessionStorage.getItem("trilhas_telefone") || "");
+  const [clienteInfo, setClienteInfo] = useState(null);
   const [cart, setCart] = useState([]);
   const [sending, setSending] = useState(false);
   const [requestingBill, setRequestingBill] = useState(false);
@@ -1194,7 +1348,7 @@ function App() {
     };
     try {
       await addOrder(order);
-      if (telefone) registrarVisita(telefone, nome, valorPedido);
+      if (telefone) registrarVisita(telefone, nome, valorPedido, order.itens);
       setCart([]);
       push("Pedido enviado para a cozinha!", "success");
       setScreen("tab");
@@ -1218,11 +1372,12 @@ function App() {
     }
   };
 
-  const submitName = (n, tel) => {
+  const submitName = (n, tel, recorrencia) => {
     const c = codigo || generateComandaCode();
     setNome(n);
     setCodigo(c);
     setTelefone(tel);
+    setClienteInfo(recorrencia || null);
     sessionStorage.setItem("trilhas_nome", n);
     sessionStorage.setItem("trilhas_codigo", c);
     if (tel) sessionStorage.setItem("trilhas_telefone", tel);
@@ -1251,6 +1406,7 @@ function App() {
           cart={cart}
           setCart={setCart}
           menuData={menuData}
+          clienteInfo={clienteInfo}
           onGoCart={() => setScreen("cart")}
           onGoTab={() => setScreen("tab")}
         />
