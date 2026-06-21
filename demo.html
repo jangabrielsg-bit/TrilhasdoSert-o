@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trilhas do Sertão — Sistema de Gestão</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #0D0A08;
+    --brown:    #1A1410;
+    --leather:  #2A1A08;
+    --amber:    #D4821A;
+    --amberL:   #F0A030;
+    --green:    #3D7035;
+    --greenL:   #5A9E4A;
+    --cream:    #C9C2B3;
+    --dim:      #6E6458;
+    --blue:     #1A4A7A;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--cream);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 60px 24px;
+    position: relative; overflow: hidden;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(212,130,26,0.14) 0%, transparent 65%),
+                radial-gradient(ellipse 60% 40% at 50% 100%, rgba(61,112,53,0.1) 0%, transparent 60%),
+                var(--bg);
+  }
+  .hero-logo { height: 130px; object-fit: contain; margin-bottom: 28px;
+    filter: drop-shadow(0 8px 32px rgba(212,130,26,0.35)); }
+  .hero h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(32px, 6vw, 64px); font-weight: 900;
+    line-height: 1.15; margin-bottom: 20px;
+  }
+  .hero h1 em { color: var(--amberL); font-style: normal; }
+  .hero h1 span { color: var(--greenL); }
+  .hero p { font-size: clamp(15px, 2vw, 20px); color: var(--dim); max-width: 560px; line-height: 1.65; margin-bottom: 44px; }
+
+  .hero-cta {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--green); color: #fff;
+    font-size: 18px; font-weight: 700;
+    padding: 18px 44px; border-radius: 50px;
+    text-decoration: none;
+    box-shadow: 0 8px 32px rgba(61,112,53,0.4);
+    transition: transform .2s, box-shadow .2s;
+  }
+  .hero-cta:hover { transform: translateY(-3px); box-shadow: 0 14px 40px rgba(61,112,53,0.5); }
+
+  .scroll-hint {
+    position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--dim); letter-spacing: 1px; text-transform: uppercase;
+    animation: bounce 2s ease-in-out infinite;
+  }
+  .scroll-hint::after { content: '↓'; font-size: 18px; color: var(--amber); }
+  @keyframes bounce { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(6px)} }
+
+  /* ── MODULES SHOWCASE ── */
+  .showcase { padding: 80px 24px; max-width: 1200px; margin: 0 auto; }
+
+  .section-label {
+    text-align: center; font-size: 13px; color: var(--amber);
+    letter-spacing: 3px; text-transform: uppercase; margin-bottom: 14px;
+    font-weight: 600;
+  }
+  .section-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(28px, 4vw, 48px); font-weight: 900;
+    text-align: center; margin-bottom: 56px; color: var(--cream);
+  }
+  .section-title em { color: var(--amberL); font-style: normal; }
+
+  /* Tabs */
+  .tabs {
+    display: flex; justify-content: center; gap: 12px;
+    flex-wrap: wrap; margin-bottom: 52px;
+  }
+  .tab {
+    display: flex; align-items: center; gap: 8px;
+    padding: 14px 28px; border-radius: 50px; cursor: pointer;
+    font-size: 15px; font-weight: 600;
+    border: 1.5px solid rgba(212,130,26,0.2);
+    background: var(--brown); color: var(--dim);
+    transition: all .25s; user-select: none;
+  }
+  .tab:hover { border-color: var(--amber); color: var(--cream); }
+  .tab.active { background: var(--amber); color: #000; border-color: var(--amber);
+    box-shadow: 0 6px 24px rgba(212,130,26,0.35); }
+  .tab .tab-icon { font-size: 18px; }
+
+  /* Module panel */
+  .module-panel { display: none; }
+  .module-panel.active { display: flex; gap: 56px; align-items: flex-start; flex-wrap: wrap; }
+
+  /* Phone mockup */
+  .phone-area {
+    flex: 0 0 300px; display: flex; flex-direction: column; align-items: center; gap: 16px;
+    position: sticky; top: 100px;
+  }
+  .phone-frame {
+    width: 280px; height: 590px;
+    background: #111; border-radius: 44px;
+    border: 6px solid #2a2a2a;
+    box-shadow: 0 0 0 1px #1a1a1a, 0 32px 80px rgba(0,0,0,0.7), inset 0 0 0 1px #333;
+    position: relative; overflow: hidden; cursor: pointer;
+  }
+  .phone-frame::before {
+    content: ''; position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+    width: 80px; height: 20px; background: #0a0a0a; border-radius: 10px; z-index: 10;
+  }
+  .phone-screen {
+    width: 100%; height: 100%; object-fit: cover; object-position: top;
+    border-radius: 38px;
+    transition: opacity .4s, transform .4s;
+  }
+  .phone-screen.fade { opacity: 0; transform: scale(0.97); }
+
+  .thumb-row {
+    display: flex; gap: 8px;
+  }
+  .thumb {
+    width: 54px; height: 96px; border-radius: 10px; overflow: hidden;
+    border: 2.5px solid transparent; cursor: pointer;
+    transition: border-color .2s, transform .2s;
+    flex-shrink: 0;
+  }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+  .thumb.active { border-color: var(--amber); transform: scale(1.06); }
+  .thumb:hover:not(.active) { border-color: rgba(212,130,26,0.4); transform: scale(1.04); }
+
+  /* Module info */
+  .module-info { flex: 1; min-width: 280px; padding-top: 8px; }
+  .module-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--leather); border: 1px solid rgba(212,130,26,0.25);
+    border-radius: 24px; padding: 8px 18px; margin-bottom: 22px;
+    font-size: 14px; color: var(--amberL); font-weight: 600;
+  }
+  .module-info h2 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(26px, 3.5vw, 40px); font-weight: 900;
+    line-height: 1.2; margin-bottom: 16px;
+  }
+  .module-info p {
+    font-size: 16px; color: var(--dim); line-height: 1.7; margin-bottom: 32px;
+  }
+
+  .features { display: flex; flex-direction: column; gap: 14px; }
+  .feature {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: var(--brown); border-radius: 14px;
+    padding: 16px 18px; border: 1px solid rgba(255,255,255,0.05);
+    transition: border-color .2s;
+  }
+  .feature:hover { border-color: rgba(212,130,26,0.2); }
+  .feature-icon {
+    width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .feature-text strong { display: block; font-size: 15px; color: var(--cream); margin-bottom: 3px; }
+  .feature-text span { font-size: 13.5px; color: var(--dim); line-height: 1.5; }
+
+  /* ── NUMBERS ── */
+  .numbers-section {
+    background: var(--brown);
+    border-top: 1px solid rgba(212,130,26,0.12);
+    border-bottom: 1px solid rgba(212,130,26,0.12);
+    padding: 80px 24px;
+  }
+  .numbers-grid {
+    max-width: 900px; margin: 48px auto 0;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 24px;
+  }
+  .number-card {
+    text-align: center; padding: 36px 20px;
+    background: var(--bg); border-radius: 20px;
+    border: 1px solid rgba(212,130,26,0.12);
+    transition: transform .2s, box-shadow .2s;
+  }
+  .number-card:hover { transform: translateY(-4px); box-shadow: 0 16px 48px rgba(0,0,0,0.4); }
+  .number-val {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 52px; font-weight: 900; line-height: 1;
+  }
+  .number-label { font-size: 14px; color: var(--dim); margin-top: 10px; line-height: 1.45; }
+
+  /* ── CTA FINAL ── */
+  .cta-section {
+    padding: 100px 24px; text-align: center;
+    background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(212,130,26,0.1) 0%, transparent 70%);
+  }
+  .mascote-cta { height: 120px; margin-bottom: 28px;
+    filter: drop-shadow(0 8px 32px rgba(0,0,0,0.5));
+    animation: wobble 3s ease-in-out infinite;
+  }
+  @keyframes wobble { 0%,100%{transform:rotate(-3deg)} 50%{transform:rotate(3deg)} }
+  .cta-section h2 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(28px, 5vw, 52px); font-weight: 900;
+    margin-bottom: 18px;
+  }
+  .cta-section h2 em { color: var(--amberL); font-style: normal; }
+  .cta-section p { font-size: 18px; color: var(--dim); margin-bottom: 44px; max-width: 500px; margin-left: auto; margin-right: auto; }
+
+  .cta-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--green); color: #fff;
+    font-size: 17px; font-weight: 700; padding: 18px 40px; border-radius: 50px;
+    text-decoration: none; box-shadow: 0 6px 28px rgba(61,112,53,0.4);
+    transition: transform .2s, box-shadow .2s;
+  }
+  .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(61,112,53,0.5); }
+  .btn-secondary {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: transparent; color: var(--amber);
+    font-size: 17px; font-weight: 600; padding: 18px 40px; border-radius: 50px;
+    text-decoration: none; border: 2px solid var(--amber);
+    transition: background .2s, color .2s;
+  }
+  .btn-secondary:hover { background: var(--amber); color: #000; }
+
+  .footer {
+    background: #080604; padding: 28px 24px; text-align: center;
+    font-size: 13px; color: #3a3028; border-top: 1px solid #1a1410;
+  }
+  .footer span { color: #5a4a38; }
+
+  /* ── Lightbox ── */
+  .lightbox {
+    display: none; position: fixed; inset: 0; z-index: 1000;
+    background: rgba(0,0,0,0.92); align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .lightbox.open { display: flex; }
+  .lightbox img {
+    max-height: 90vh; max-width: 420px; width: 100%;
+    border-radius: 32px; box-shadow: 0 32px 96px rgba(0,0,0,0.8);
+    animation: lbIn .3s cubic-bezier(.3,1.4,.4,1) both;
+  }
+  @keyframes lbIn { 0%{opacity:0;transform:scale(.88)} 100%{opacity:1;transform:scale(1)} }
+  .lightbox-close {
+    position: absolute; top: 20px; right: 24px;
+    font-size: 36px; color: #fff; cursor: pointer; line-height: 1;
+    opacity: .6; transition: opacity .2s;
+  }
+  .lightbox-close:hover { opacity: 1; }
+
+  @media (max-width: 720px) {
+    .module-panel.active { flex-direction: column; align-items: center; }
+    .phone-area { position: static; }
+    .tab { padding: 12px 18px; font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <span class="lightbox-close">×</span>
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <img class="hero-logo" src="logo.png" alt="Trilhas do Sertão Burger">
+  <h1>Sistema de Gestão<br><em>feito para o</em> <span>Trilhas</span></h1>
+  <p>Cardápio digital, pedidos em tempo real e controle total do negócio — tudo no celular, sem instalar nada.</p>
+  <a href="#demo" class="hero-cta">🌵 Ver o sistema em ação</a>
+  <div class="scroll-hint">Rolar para ver</div>
+</section>
+
+<!-- SHOWCASE -->
+<section class="showcase" id="demo">
+  <div class="section-label">Demo interativo</div>
+  <h2 class="section-title">Veja cada módulo <em>funcionando</em></h2>
+
+  <div class="tabs">
+    <div class="tab active" onclick="selectTab('cliente')">
+      <span class="tab-icon">📱</span> Cliente
+    </div>
+    <div class="tab" onclick="selectTab('garcom')">
+      <span class="tab-icon">🍽️</span> Garçom
+    </div>
+    <div class="tab" onclick="selectTab('cozinha')">
+      <span class="tab-icon">👨‍🍳</span> Cozinha
+    </div>
+    <div class="tab" onclick="selectTab('gerencial')">
+      <span class="tab-icon">📊</span> Gerencial
+    </div>
+  </div>
+
+  <!-- CLIENTE -->
+  <div class="module-panel active" id="panel-cliente">
+    <div class="phone-area">
+      <div class="phone-frame" onclick="openLightbox(currentScreens.cliente[currentIdx.cliente])">
+        <img class="phone-screen" id="screen-cliente" src="ss_cliente_1.png" alt="Tela Cliente">
+      </div>
+      <div class="thumb-row">
+        <div class="thumb active" onclick="setScreen('cliente',0)">
+          <img src="ss_cliente_1.png" alt="">
+        </div>
+        <div class="thumb" onclick="setScreen('cliente',1)">
+          <img src="ss_cliente_2.png" alt="">
+        </div>
+      </div>
+      <span style="font-size:12px;color:var(--dim)">Toque para ampliar</span>
+    </div>
+    <div class="module-info">
+      <div class="module-badge">📱 Módulo Cliente</div>
+      <h2>O cliente pede<br>direto do celular</h2>
+      <p>Sem papel, sem garçom indo e voltando, sem confusão. O cliente escaneia o QR Code da mesa e faz o pedido com poucos toques.</p>
+      <div class="features">
+        <div class="feature">
+          <div class="feature-icon" style="background:rgba(61,112,53,0.2)">🍔</div>
+          <div class="feature-text">
+            <strong>Cardápio digital completo</strong>
+            <span>Fotos, preços, categorias e personalizações tudo em um lugar.</span>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon" style="background:rgba(212,130,26,0.15)">✅</div>
+          <div class="feature-text">
+            <strong>Pedido confirmado pelo próprio cliente</strong>
+            <span>Ele revisa tudo antes de enviar — zero erro de interpretação.</span>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon" style="background:rgba(61,112,53,0.2)">📲</div>
+          <div class="feature-text">
+            <strong>Sem baixar aplicativo</strong>
+            <span>Funciona em qualquer celular, direto no navegador.</span>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon" style="background:rgba(26,74,122,0.2)">🌵</div>
+          <div class="feature-text">
+            <strong>Mascote interativo</strong>
+            <span>O cacto reage a cada pedido com animações e frases sertanejas.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GARÇOM -->
+  <div class="module-panel" id="panel-garcom">
+    <div class="phone-area">
+      <div class="phone-frame" onclick="openLightbox(currentScreens.garcom[currentIdx.garcom])">
+        <img class="phone-screen" id="screen-garcom" src="ss_garcom_1.png" alt="Tela Garçom">
+      </div>
+      <div class="thumb-row">
+        <div class="thumb active" onclick="setScreen('garcom',0)">
+          <img src="ss_garcom_1.png" alt="">
+        </div>
+        <div class="thumb" onclick="setScreen('garcom',1)">
+          <img src="ss_garcom_2.png" alt="">
+        </div>
+      </div>
+      <span style="font-size:12px;color:var(--dim)">Toque para ampliar</span>
+    </div>
+    <div class="module-info">
+      <div class="module-badge">🍽️ Módulo Garçom</div>
+      <h2>Tudo na palma<br>da mão do garçom</h2>
+      <p>O garçom acessa pelo celular com um código. Vê todas as mesas, acompanha pedidos e fecha a comanda sem sair do salão.</p>
+      <div class="features">
+        <div class="feature">
+          <div class="feature-icon" style="background:rgba(212,130,26,0.15)">🔐</div>
+          <div class="feature-text">
+            <strong>Acesso seguro por senha</strong>
+            <span>Cada garçom entra com sua senha — sem misturar dados.</span>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon" style="background:rgba(61,112,53,0.2)">🗺️</div>
+          <div class="feature-text">
+            <strong>Visão de todas as mesas</strong>
+            <span>Status em tempo real: livre, ocupada, aguardando pedido.</span>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon" style="background:rgba(122,64,16,0.25)">🧾</div>
+          <div class="feature-text">
+            <strong>Comanda digital</strong>
+            <span>Fecha a conta e mostra o total por mesa com um toque.</span>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon" style="background:rgba(26,74,122,0.2)">⚡</div>
+          <div class="feature-text">
+            <strong>Pedidos chegam na cozinha na hora</strong>
+            <span>Sem precisar ir até a cozinha dar o pedido — tudo automático.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COZINHA -->
+  <div class="module-panel" id="panel-cozinha">
+    <div class="phone-area">
+      <div class="phone-frame" onclick="openLightbox(currentScreens.cozinha[currentIdx.cozinha])">
+        <img class="phone-screen" id="screen-cozinha" src="ss_cozinha_1.png" alt="Tela Cozinha">
+      </div>
+      <div class="thumb-row">
+        <div class="thumb active" onclick="setScreen('cozinha',0)">
+          <img src="ss_cozinha_1.png" alt="">
+        </div>
+        <div class="thumb" onclick="setScreen('cozinha',1)">
+          <img src="ss_cozinha_2.png" alt="">
+        </div>
+      </div>
+      <span style="font-size:12px;color:var(--dim)">Toque para ampliar</span>
+    </div>
+    <div class="module-info">
+      <div class="module-badge">👨‍🍳 Módulo Cozinha</div>
+      <h2>A cozinha sempre<br>informada</h2>
+      <p>Os pedidos aparecem na tela da cozinha em segundos, organizados por prioridade. Sem grito, sem papel, sem pedido perdido.</p>
+      <div class="features">
+        <div class="feature">
+          <div class="feature-icon" style="background:rgba(212,130,26,0.15)">🔴</div>
+          <div class="feature-text">
+            <strong>Fila em tempo real</strong>
+            <span>Novo pedido aparece automaticamente — com alerta sonoro.</span>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon" style="background:rgba(61,112,53,0.2)">✅</div>
+          <div class="feature-text">
+            <strong>Marcar como pronto com um toque</strong>
+            <span>Status atualiza para o garçom e o cliente na hora.</span>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon" style="background:rgba(122,64,16,0.25)">📋</div>
+          <div class="feature-text">
+            <strong>Organizado por etapas</strong>
+            <span>Recebido → Na brasa → Pronto. Cada item com sua fase.</span>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon" style="background:rgba(26,74,122,0.2)">🔥</div>
+          <div class="feature-text">
+            <strong>Zero papel na cozinha</strong>
+            <span>Nada de comandinha perdida ou rasgada com gordura.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GERENCIAL -->
+  <div class="module-panel" id="panel-gerencial">
+    <div class="phone-area">
+      <div class="phone-frame" onclick="openLightbox(currentScreens.gerencial[currentIdx.gerencial])">
+        <img class="phone-screen" id="screen-gerencial" src="ss_gerencial_1.png" alt="Tela Gerencial">
+      </div>
+      <div class="thumb-row">
+        <div class="thumb active" onclick="setScreen('gerencial',0)">
+          <img src="ss_gerencial_1.png" alt="">
+        </div>
+        <div class="thumb" onclick="setScreen('gerencial',1)">
+          <img src="ss_gerencial_2.png" alt="">
+        </div>
+      </div>
+      <span style="font-size:12px;color:var(--dim)">Toque para ampliar</span>
+    </div>
+    <div class="module-info">
+      <div class="module-badge">📊 Módulo Gerencial</div>
+      <h2>Dados reais<br>do seu negócio</h2>
+      <p>O dono acessa um dashboard completo com tudo que aconteceu no dia — faturamento, pedidos, itens mais vendidos e satisfação dos clientes.</p>
+      <div class="features">
+        <div class="feature">
+          <div class="feature-icon" style="background:rgba(212,130,26,0.15)">📈</div>
+          <div class="feature-text">
+            <strong>Faturamento em tempo real</strong>
+            <span>Veja o total do dia, semana ou mês com um filtro.</span>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon" style="background:rgba(61,112,53,0.2)">🏆</div>
+          <div class="feature-text">
+            <strong>Itens mais vendidos</strong>
+            <span>Saiba o que sai mais e o que pode ser retirado do cardápio.</span>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon" style="background:rgba(26,74,122,0.2)">😊</div>
+          <div class="feature-text">
+            <strong>NPS — satisfação dos clientes</strong>
+            <span>Avaliação de 0 a 10 ao final de cada atendimento.</span>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon" style="background:rgba(122,64,16,0.25)">✏️</div>
+          <div class="feature-text">
+            <strong>Gerenciar cardápio e mesas</strong>
+            <span>Adicione, edite ou desative itens do cardápio na hora.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NUMBERS -->
+<section class="numbers-section">
+  <div class="section-label">Impacto real</div>
+  <h2 class="section-title" style="text-align:center">O que <em>muda</em> de verdade</h2>
+  <div class="numbers-grid">
+    <div class="number-card">
+      <div class="number-val" style="color:var(--greenL)">↓90%</div>
+      <div class="number-label">erros de pedido</div>
+    </div>
+    <div class="number-card">
+      <div class="number-val" style="color:var(--amberL)">↑3×</div>
+      <div class="number-label">velocidade no atendimento</div>
+    </div>
+    <div class="number-card">
+      <div class="number-val" style="color:#4A8ABB">0</div>
+      <div class="number-label">papel na operação</div>
+    </div>
+    <div class="number-card">
+      <div class="number-val" style="color:var(--greenL)">24/7</div>
+      <div class="number-label">acesso do dono de qualquer lugar</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section class="cta-section">
+  <img class="mascote-cta" src="mascote.png" alt="Mascote">
+  <h2>Bora crescer <em>juntos?</em> 🌵</h2>
+  <p>O sistema já está funcionando. Com suporte mensal, ele melhora todo mês junto com o Trilhas.</p>
+  <div class="cta-buttons">
+    <a href="https://wa.me/5500000000000" class="btn-primary">💬 Falar pelo WhatsApp</a>
+    <a href="mailto:jangabrielsg@gmail.com" class="btn-secondary">📧 Enviar e-mail</a>
+  </div>
+</section>
+
+<footer class="footer">
+  <span>Desenvolvido por Jan Gabriel · Sistema exclusivo para Trilhas do Sertão Burger 🌵</span>
+</footer>
+
+<script>
+  const currentScreens = {
+    cliente:   ["ss_cliente_1.png",   "ss_cliente_2.png"],
+    garcom:    ["ss_garcom_1.png",    "ss_garcom_2.png"],
+    cozinha:   ["ss_cozinha_1.png",   "ss_cozinha_2.png"],
+    gerencial: ["ss_gerencial_1.png", "ss_gerencial_2.png"],
+  };
+  const currentIdx = { cliente: 0, garcom: 0, cozinha: 0, gerencial: 0 };
+
+  function selectTab(name) {
+    document.querySelectorAll(".tab").forEach((t, i) => {
+      const names = ["cliente","garcom","cozinha","gerencial"];
+      t.classList.toggle("active", names[i] === name);
+    });
+    document.querySelectorAll(".module-panel").forEach(p => {
+      p.classList.toggle("active", p.id === "panel-" + name);
+    });
+  }
+
+  function setScreen(mod, idx) {
+    currentIdx[mod] = idx;
+    const img = document.getElementById("screen-" + mod);
+    img.classList.add("fade");
+    setTimeout(() => {
+      img.src = currentScreens[mod][idx];
+      img.classList.remove("fade");
+    }, 220);
+    // update thumbs
+    const panel = document.getElementById("panel-" + mod);
+    panel.querySelectorAll(".thumb").forEach((t, i) => t.classList.toggle("active", i === idx));
+  }
+
+  function openLightbox(src) {
+    document.getElementById("lightbox-img").src = src;
+    document.getElementById("lightbox").classList.add("open");
+  }
+  function closeLightbox() {
+    document.getElementById("lightbox").classList.remove("open");
+  }
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeLightbox(); });
+</script>
+</body>
+</html>
