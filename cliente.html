@@ -283,15 +283,60 @@ function makeCartKey(itemId, adicionais, obs) {
 /* ============================================================
    MASCOTE: imagem oficial do cacto sertanejo (mascote.png)
    ============================================================ */
-function CactusMascot({ className = "w-32 h-32", wobble = true }) {
+const CACTUS_ANIMS = ["cactusJump","cactusSpin","cactusShake","cactusDance","cactusSquish"];
+const CACTUS_MSGS = [
+  "Ô de casa! 🌵","Oxe, que delícia!","Vai pedir logo, sô!","Tô aqui, meu chapa!",
+  "Vixe, que fome!","Arretado demais!","Misericórdia, bora!","Sertão manda salve! 🤠",
+  "Bão demais da conta!","Tô na torcida por tu!","Aproveita, cabra!","Uai, tô aqui!",
+];
+function CactusMascot({ className = "w-32 h-32", wobble = true, interactive = false }) {
+  const [anim, setAnim] = React.useState(null);
+  const [msg, setMsg] = React.useState(null);
+  const [msgKey, setMsgKey] = React.useState(0);
+  const timerRef = React.useRef(null);
+  const idxRef = React.useRef(0);
+
+  const triggerInteraction = React.useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    const a = CACTUS_ANIMS[idxRef.current % CACTUS_ANIMS.length];
+    const m = CACTUS_MSGS[Math.floor(Math.random() * CACTUS_MSGS.length)];
+    idxRef.current++;
+    setAnim(null);
+    setTimeout(() => setAnim(a), 10);
+    setMsg(m);
+    setMsgKey(k => k + 1);
+    timerRef.current = setTimeout(() => { setAnim(null); setMsg(null); }, 2900);
+  }, []);
+
+  React.useEffect(() => {
+    if (!interactive) return;
+    const handler = () => triggerInteraction();
+    window.addEventListener("cactus-react", handler);
+    return () => window.removeEventListener("cactus-react", handler);
+  }, [interactive, triggerInteraction]);
+
+  const baseAnim = anim
+    ? { animation: `${anim} 0.65s cubic-bezier(.3,1.2,.4,1) both` }
+    : wobble && !anim ? undefined : undefined;
+  const imgClass = anim ? className : (wobble ? "wobble " + className : className);
+
+  if (!interactive) {
+    return (
+      <img src="mascote.png" alt="Mascote Trilhas do Sertão" draggable="false"
+        className={imgClass} style={{ objectFit:"contain", ...(anim ? { animation:`${anim} 0.65s cubic-bezier(.3,1.2,.4,1) both` } : {}) }} />
+    );
+  }
+
   return (
-    <img
-      src="mascote.png"
-      alt="Mascote Trilhas do Sertão"
-      draggable="false"
-      className={(wobble ? "wobble " : "") + className}
-      style={{ objectFit: "contain" }}
-    />
+    <div className="cactus-interactive" onClick={triggerInteraction} role="button" aria-label="Interagir com o mascote">
+      {msg && (
+        <div key={msgKey} className="mascot-bubble">{msg}</div>
+      )}
+      <img src="mascote.png" alt="Mascote Trilhas do Sertão" draggable="false"
+        className={anim ? className : (wobble ? "wobble " + className : className)}
+        style={{ objectFit:"contain", display:"block", ...(anim ? { animation:`${anim} 0.65s cubic-bezier(.3,1.2,.4,1) both` } : {}) }}
+      />
+    </div>
   );
 }
 
@@ -358,7 +403,7 @@ function NameGate({ onSubmit }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 relative" style={{background:"radial-gradient(ellipse at top, #1a1410 0%, #0a0a0a 60%)"}}>
       <div className="anim-rise flex flex-col items-center gap-4 w-full max-w-xs text-center">
-        <CactusMascot className="w-40 h-40" />
+        <CactusMascot className="w-40 h-40" interactive={true} />
         <LogoMark size="text-3xl" />
 
         {welcomeBack ? (
@@ -910,6 +955,7 @@ function MenuScreen({ nome, cart, setCart, menuData, clienteInfo, onGoCart, onGo
   }, [categories, activeCat]);
 
   const addToCart = (entry) => {
+    window.dispatchEvent(new Event("cactus-react"));
     const cartKey = makeCartKey(entry.id, entry.adicionais, entry.obs);
     setCart(prev => {
       const existing = prev.find(p => p.cartKey === cartKey);
@@ -966,8 +1012,9 @@ function MenuScreen({ nome, cart, setCart, menuData, clienteInfo, onGoCart, onGo
             <Icon.Receipt className="w-4 h-4" /> comanda
           </button>
         </div>
-        <div className="flex justify-center mb-2">
+        <div className="flex justify-center items-center gap-3 mb-2">
           <LogoMark size="text-xl" />
+          <CactusMascot className="w-10 h-10" wobble={true} interactive={true} />
         </div>
         <div ref={scrollRef} className="flex gap-2 overflow-x-auto scrollbar-none pb-1 -mx-4 px-4">
           {categories.map(cat => (
